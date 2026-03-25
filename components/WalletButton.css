@@ -1,0 +1,35 @@
+.con {
+  height: 44px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.not-connected {
+  background-color: var(--wallet-btn-bg-color);
+  border: solid 1px var(--wallet-btn-border-color);
+  color: var(--wallet-btn-txt-color);
+}
+
+.balance-con {
+  border: solid 1px var(--btn-border-color);
+  background-color: var(--normal-btn-bg);
+}
+
+.account-con {
+  background-color: var(--wallet-btn-account-bg-color);
+  color: #fff;
+}
+
+.account-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 100px;
+}

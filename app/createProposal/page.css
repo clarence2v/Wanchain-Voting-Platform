@@ -1,0 +1,346 @@
+.back-title {
+  height: 44px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--discription-color);
+}
+
+.create-body {
+  width: 776px;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 2px 2px 2px rgba(0, 0, 0, 0.16);
+  border: solid 1px var(--introduction-border-color);
+  background-color: var(--header-bg);
+}
+
+.create-body .create-title {
+  font-size: 24px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--title-color);
+}
+
+.create-body .create-discription {
+  opacity: 0.7;
+  font-family: Inter;
+  font-size: 14px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--vote-tab-txt-color);
+}
+
+.create-body .creation-line {
+  width: 100%;
+  height: 1px;
+  background-color: var(--introduction-line-bg-color);
+}
+
+.create-body .proposal-creation-discription-con {
+  padding: 1rem;
+  border-radius: 14px;
+  border: solid 1px var(--proposal-creation-discription-bd-color);
+  background-color: rgba(47, 189, 244, 0.1);
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.create-body .proposal-creation-discription-title, .create-body .proposal-creation-discription-value {
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: #29aadc;
+}
+
+.create-body .proposal-creation-discription-value {
+  font-weight: normal;
+  color: #2fbdf4;
+}
+
+.create-body .extra-large-icon-size {
+  width: 24px;
+  height: 24px;
+}
+
+.create-body .large-icon-size {
+  width: 20px;
+  height: 20px;
+}
+
+.create-body .normal-icon-size {
+  width: 18px;
+  height: 18px;
+}
+
+.create-body .small-icon-size {
+  width: 16px;
+  height: 16px;
+}
+
+.create-body .creation-item-title {
+  height: 18px;
+  line-height: 18px;
+  font-size: 18px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--title-color);
+}
+
+.create-body .creation-proposal-title {
+  font-size: 14px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--title-color);
+}
+
+.create-body .inp-con {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  border: solid 1px var(--btn-border-color);
+  background-color: var(--background);
+  font-size: 14px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--discription-color);
+}
+
+.create-body .inp-con:hover {
+  background-color: var(--background) !important;
+}
+
+.create-body .inp-request-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--title-color);
+}
+
+.create-body .inp-select-con {
+  border-radius: 16px;
+  box-shadow: 0 0 18px 0 rgba(0, 0, 0, 0.06);
+  background-color: var(--proposal-creation-select-bg-color);
+}
+
+.create-body .creation-discription-tip {
+  font-family: Inter;
+  font-size: 12px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--discription-color);
+}
+
+.create-body .voting-mechanism-con {
+  width: 100%;
+  padding: 4px;
+  border-radius: 10px;
+  background-color: var(--proposal-creation-type-bg-color);
+}
+
+.create-body .voting-mechanism-item {
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  cursor: pointer;
+}
+
+.create-body .funding-requestion-con {
+  border-radius: 10px;
+  border: solid 1px var(--btn-border-color);
+  background-color: var(--background);
+}
+
+.create-body .funding-requestion-title {
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  color: var(--vote-tab-txt-color);
+}
+
+.create-body .creation-description {
+  width: 100%;
+  height: 170px;
+  border-radius: 10px;
+  border: solid 1px var(--btn-border-color);
+  background-color: var(--background);
+  padding: 12px 16px;
+}
+
+.create-body .creation-prospective-title {
+  font-size: 14px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: #ffab00;
+}
+
+.create-body .creation-prospective-active-title {
+  font-size: 14px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: #0fc659;
+}
+
+.create-body .creation-proposal-descrition {
+  font-size: 14px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.43;
+  letter-spacing: normal;
+  text-align: left;
+  color: var(--proposal-creation-txt-color);
+}
+
+.create-body .prograss-line {
+  height: 6px;
+  opacity: 0.2;
+  background-color: #517aae;
+  border-radius: 100px;
+}
+
+.create-body .prograss-active-line {
+  height: 6px;
+  background-color: #0fc659;
+  border-radius: 100px;
+}
+
+.create-body .creation-prospective-con {
+  padding: 16px;
+  border-radius: 8px;
+  border: solid 1px rgba(255, 171, 0, 0.2);
+  background-color: rgba(255, 171, 0, 0.05);
+}
+
+.create-body .creation-prospective-active-con {
+  padding: 16px;
+  border-radius: 8px;
+  border: solid 1px var(--proposal-creation-active-bd-color);
+  background-color: var(--proposal-creation-active-bg-color);
+}
+
+.create-body .creation-email-con {
+  border-radius: 10px;
+  border: solid 1px var(--btn-border-color);
+  background-color: var(--background);
+  height: 48px;
+}
+
+.create-body .creation-voting-con {
+  border-radius: 10px;
+  border: solid 1px var(--title-activebd-color);
+  background-color: var(--wallet-btn-bg-color);
+  padding: 16px;
+}
+
+.create-body .creation-voting-title {
+  color: var(--title-color);
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: 0.3px;
+}
+
+.create-body .creation-voting-value {
+  flex: 1;
+  padding-top: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--vote-tab-txt-color);
+}
+
+.create-body .creation-voting-duration-con {
+  width: 24%;
+  padding-left: 4rem;
+}
+
+.create-body .creation-voting-duration-value {
+  font-size: 14px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-align: right;
+  color: var(--title-active-color);
+  margin-bottom: 2px;
+}
+
+.create-body .creation-voting-duration-note {
+  font-size: 12px;
+  color: var(--proposal-creation-voting-txt-color);
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-align: right;
+}
+
+.create-body .creation-submit-btn {
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 10px;
+  background-color: #0f68aa;
+  font-size: 14px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 16px;
+  cursor: pointer;
+}
+
+.create-body .creation-cancel-btn {
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 10px;
+  background-color: none;
+  font-size: 14px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--proposal-creation-txt-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}

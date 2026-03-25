@@ -1,0 +1,55 @@
+.confirm-modal-title {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--title-color);
+}
+
+.extra-large-icon-size {
+  width: 24px;
+  width: 24px;
+}
+
+.confirm-modal-body {
+  opacity: 0.7;
+  font-size: 16px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--vote-tab-txt-color);
+}
+
+.confirm-modal-cancel-btn {
+  height: 40px;
+  padding: 0 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: var(--vote-type-txt-color);
+}
+
+.confirm-modal-confirm-btn {
+  border-radius: 8px;
+  background-color: #0f68aa;
+  height: 40px;
+  padding: 0 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  color: #fff;
+}

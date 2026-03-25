@@ -1,0 +1,1 @@
+export const TESTNET_XP_ADDR = '0x23ffb9307350e7121Ab4041460f5397b1b024d6C' as const;

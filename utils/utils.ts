@@ -1,0 +1,113 @@
+import BigNumber from "bignumber.js";
+import Numeral from 'numeral'
+
+export const handleTime = (time: string) => {
+  const timeNum = Number(time) / 1000;
+  const day = Math.floor(timeNum / 86400);
+  const hour = Math.ceil((timeNum - day * 86400) / 3600);
+  return `${day}d ${hour}h`;
+}
+
+function randomHex() {
+  return '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0');
+}
+
+export function randomCssGradient() {
+  const c1 = randomHex();
+  const c2 = randomHex();
+
+  return `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`;
+}
+
+
+export function randomCssGradient2(addr: string | undefined) {
+  if (!addr) return randomCssGradient();
+  const len = addr.length;
+  const c1 = `#${String(addr).slice(len - 6, len)}`;
+  const c2 = `#${String(addr).slice(2, 8)}`;
+
+  return `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`;
+}
+
+export const checkDefaultNum = (account: string | number | bigint) => {
+  if (['-', 'N/A'].includes(String(account))) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+export const removeExtraZero = (str: string): string => {
+  if (checkDefaultNum(str)) return str;
+  let decimalPlace = String(parseFloat('.' + str.split('.')[1]))
+  decimalPlace = new BigNumber(decimalPlace).toString(10)
+  if (isNaN(Number(decimalPlace))) return str
+  return Number(decimalPlace) === 0
+    ? str.split('.')[0]
+    : str.split('.')[0] + '.' + decimalPlace.split('.')[1]
+}
+
+export const formatValue = (
+  value: string | bigint | number | undefined,
+  decimals: number | string = 18,
+): string => {
+  if (!value) {
+    return '0'
+  }
+  if (checkDefaultNum(value)) {
+    return String(value);
+  }
+  const formatNum = new BigNumber(value)
+    .dividedBy(Math.pow(10, +decimals))
+    .toString(10)
+  return removeExtraZero(Numeral(formatNum).format('0,0'))
+}
+
+export function formatBalance(
+  balance: string | number | bigint,
+  decimal: number | string = 18,
+): string {
+  return new BigNumber(balance).dividedBy(Math.pow(10, +decimal)).toString(10)
+}
+
+export function convertBigIntToNumber(value: any): any {
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+  if (value === null) return null;
+  if (Array.isArray(value)) {
+    return value.map(convertBigIntToNumber);
+  }
+  if (typeof value === 'object') {
+    const out: any = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = convertBigIntToNumber(v);
+    }
+    return out;
+  }
+  return value;
+}
+
+export function convertArrayItemsBigIntToNumber(arr: Array<any>) {
+  if (!Array.isArray(arr)) throw new TypeError('Expected an array');
+  return arr.map(item => convertBigIntToNumber(item));
+}
+
+export function isNumber(val: any) {
+  const regPos = /^\d+(\.\d+)?$/ // 非负浮点数
+  const regNeg =
+    /^(-(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*)))$/ // 负浮点数
+  return !!(regPos.test(val) || regNeg.test(val))
+}
+
+export const clipString = (str: string, preLen: number, sufLen: number) => {
+  if (
+    preLen < 1 ||
+    sufLen < 1
+  )
+    return str;
+  if (str.length <= preLen + sufLen) return str;
+  let text = '';
+  text = str.substr(0, preLen) + '...' + str.substr(-sufLen);
+  return text;
+};

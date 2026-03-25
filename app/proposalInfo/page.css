@@ -1,0 +1,134 @@
+.proposal-info-con {
+  padding: 2rem;
+  border-radius: 16px;
+  background-color: var(--header-bg);
+  box-shadow: 0 2px 2px 2px rgba(0, 0, 0, 0.16);
+  border: solid 1px var(--introduction-border-color);
+}
+
+.proposal-info-item-con {
+  flex: 1;
+  margin-right: 26px;
+}
+
+.proposal-info-status-con {
+  width: 368px;
+  height: fit-content;
+}
+
+.proposal-info-title {
+  font-size: 28px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  color: var(--title-color);
+  margin-bottom: 1rem;
+}
+
+.large-icon-size {
+  width: 20px;
+  height: 20px;
+}
+
+.proposal-info-user-info-con {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--introduction-border-color);
+}
+
+.proposal-info-user-icon-con {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 100%;
+  background-color: var(--normal-btn-bg);
+  margin-right: 12px;
+}
+
+.proposal-info-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  text-align: left;
+  color: var(--title-color);
+  margin-bottom: 2px;
+}
+
+.proposal-info-user-account {
+  color: val(--vote-tab-txt-color);
+  font-size: 12px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+}
+
+.proposal-info-decription-title {
+  font-size: 18px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  color: var(--title-color);
+  margin-bottom: 8px;
+}
+
+.proposal-info-decription-value{
+  font-family: Inter;
+  font-size: 16px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  color: var(--vote-tab-txt-color);
+}
+
+.proposal-info-status-title {
+  font-size: 18px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  color: var(--title-color);
+}
+
+.proposal-info-status-value {
+  font-size: 14px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  color: var(--vote-tab-txt-color);
+  display: flex;
+  align-items: center;
+}
+
+.proposal-info-total-votes-title {
+  font-size: 14px;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  color: var(--vote-tab-txt-color);
+}
+
+.proposal-info-total-votes-value {
+  font-size: 18px;
+  font-weight: bold;
+  font-stretch: normal;
+  font-style: normal;
+  color: var(--title-color);
+}
+
+.proposal-info-vote-btn {
+  padding: 12px 0;
+  border-radius: 14px;
+  background-color: #0f68aa;
+  font-size: 16px;
+  font-weight: 600;
+  font-stretch: normal;
+  font-style: normal;
+  text-align: center;
+  color: #fff;
+  cursor: pointer;
+}

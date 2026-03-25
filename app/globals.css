@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f4f8fb;
+  --header-bg: #ffffff;
+  --title-color: #0e1523;
+  --title-active-color: #0d5f9a;
+  --title-activebd-color: #99cbef;
+  --discription-color: rgba(14, 21, 35, 0.5);
+  --normal-btn-bg: #f4f8fb;
+  --btn-border-color: #dce4ef;
+  --wallet-btn-bg-color: #e6f2fa;
+  --wallet-btn-border-color: #99cbef;
+  --wallet-btn-account-bg-color: #263d5f;
+  --wallet-btn-txt-color: #0d5f9a;
+  --introduction-border-color: #e9f0f7;
+  --proposal-border-purpers-color: rgba(135, 91, 247, 0.3);
+  --proposal-bg-purpers-color: rgba(135, 91, 247, 0.1);
+  --vote-status-bg-active-color: #e6fafe;
+  --vote-tab-txt-color: rgba(14, 21, 35, 0.7);
+  --vote-modal-type-border-color: #99cbef;
+  --vote-type-txt-color: rgba(14, 21, 35, 0.6);
+  --vote-yes-active-bg-color: #e6f9eb;
+  --vote-no-active-bg-color: #fde6e8;
+  --vote-modal-amount-txt-color: rgba(14, 21, 35, 0.4);
+  --proposal-type-funding-border-color: #99cbef;
+  --introduction-line-bg-color: #e9f0f7;
+  --proposal-creation-discription-bd-color: #99ebfb;
+  --proposal-creation-type-bg-color: #e9f0f7;
+  --proposal-creation-select-bg-color: #fff;
+  --proposal-creation-txt-color: rgba(14, 21, 35, 0.5);
+  --proposal-creation-active-bd-color: #99e7af;
+  --proposal-creation-active-bg-color: #e6f9eb;
+  --proposal-creation-voting-txt-color: #94adcf;
+  /* --foreground: #171717; */
+}
+
+.dark:root {
+  --background: #0e1523;
+  --header-bg: #152234;
+  --title-color: #ffffff;
+  --title-active-color: #1c87dc;
+  --title-activebd-color: #263d5f;
+  --discription-color: rgba(255, 255, 255, 0.5);
+  --normal-btn-bg: #1d2f49;
+  --btn-border-color: #263d5f;
+  --wallet-btn-bg-color: #1d2f49;
+  --wallet-btn-border-color: #0f68aa;
+  --wallet-btn-account-bg-color: #2f4c77;
+  --wallet-btn-txt-color: #1c87dc;
+  --introduction-border-color: #263d5f;
+  --proposal-border-purpers-color: rgba(135, 91, 247, 0.7);
+  --proposal-bg-purpers-color: rgba(135, 91, 247, 0.1);
+  --vote-status-bg-active-color: rgba(46, 187, 242, 0.1);
+  --vote-tab-txt-color: rgba(255, 255, 255, 0.7);
+  --vote-modal-type-border-color: #345a8d;
+  --vote-type-txt-color: rgba(255, 255, 255, 0.6);
+  --vote-yes-active-bg-color: rgba(15, 198, 89, 0.1);
+  --vote-no-active-bg-color: rgba(224, 31, 57, 0.1);
+  --vote-modal-amount-txt-color: rgba(255, 255, 255, 0.4);
+  --proposal-type-funding-border-color: #263d5f;
+  --introduction-line-bg-color: #0e1523;
+  --proposal-creation-discription-bd-color: #263d5f;
+  --proposal-creation-type-bg-color: #1d2f49;
+  --proposal-creation-select-bg-color: #1d2f49;
+  --proposal-creation-txt-color: rgba(255, 255, 255, 0.5);
+  --proposal-creation-active-bd-color: rgba(15, 198, 89, 0.2);
+  --proposal-creation-active-bg-color: rgba(15, 198, 89, 0.1);
+  --proposal-creation-voting-txt-color: #8ca9cf;
+  /* --foreground: #ededed; */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  /* --color-foreground: var(--foreground); */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  /* color: var(--foreground); */
+  font-family: Inter;
+}
+
+input {
+  background: none;
+  outline: none;
+  border: none;
+}
