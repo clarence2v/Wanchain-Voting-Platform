@@ -1,11 +1,42 @@
 import BigNumber from "bignumber.js";
 import Numeral from 'numeral'
+import copy2Clipboard from "copy-to-clipboard"
 
-export const handleTime = (time: string) => {
+export const copyTxt2Clipboard = (text: string) => {
+  if (copy2Clipboard(text)) {
+    console.log('Copied');
+  } else {
+    console.error('Failed to copy');
+  }
+};
+
+export const handleTime = (time: string | number) => {
   const timeNum = Number(time) / 1000;
   const day = Math.floor(timeNum / 86400);
   const hour = Math.ceil((timeNum - day * 86400) / 3600);
   return `${day}d ${hour}h`;
+}
+
+export const handleTimeThMaxPer = (time: string | number, isLower?: boolean) => {
+  const timeNum = Number(time)
+  const day = Math.floor(timeNum / 86400);
+  let str = '';
+  if (day >= 365) {
+    const year = Math.floor(day / 365)
+    str =  `${year} Year${year > 1 ? 's' : ''}`
+  } else if (day >= 30) {
+    const month = Math.floor(day / 30);
+    str =  `${month} Month${month > 1 ? 's' : ''}`
+  } else if (day >= 1) {
+    str =  `${day} Day${day > 1 ? 's' : ''}`
+  } else {
+    const hour = Math.floor(timeNum / 3600);
+    str =  `${hour} Hour${hour > 1 ? 's' : ''}`
+  }
+  if (isLower) {
+    return str.toLocaleLowerCase();
+  }
+  return str;
 }
 
 function randomHex() {

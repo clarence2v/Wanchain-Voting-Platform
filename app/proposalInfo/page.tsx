@@ -2,7 +2,7 @@
 import "./page.css";
 import Image from "next/image";
 import { useTheme } from 'next-themes';
-import VoteModal from "@/components/VoteModal";
+// import VoteModal from "@/components/VoteModal";
 import Link from 'next/link';
 import { useDisclosure, Progress } from "@heroui/react";
 import { useMemo } from "react";
@@ -89,10 +89,11 @@ export default function Proposals() {
           <div className="proposal-info-vote-btn" onClick={onOpen}>Vote Now</div>
         </div>
       </div>
-      <VoteModal
+      {/* <VoteModal
         onClose={onClose}
         isOpen={isOpen}
-      />
+        proposalInfo={{}}
+      /> */}
     </div>
   )
 }

@@ -151,67 +151,6 @@
   background-color: var(--header-bg);
 }
 
-.vote-type {
-  height: 26px;
-  line-height: 26px;
-  padding: 0 12px;
-  border-radius: 100px;
-  border: solid 1px var(--wallet-btn-border-color);
-  background-color: var(--wallet-btn-bg-color);
-  font-size: 12px;
-  font-weight: 500;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
-}
-
-.vote-type-funding {
-  color: var(--wallet-btn-txt-color);
-}
-
-.vote-id {
-  height: 26px;
-  line-height: 26px;
-  padding: 0 12px;
-  border-radius: 100px;
-  border: solid 1px var(--btn-border-color);
-  background-color: var(--normal-btn-bg);
-  font-size: 12px;
-  font-weight: 500;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
-  opacity: 0.5;
-  color: var(--title-color);
-}
-
-.vote-status {
-  height: 26px;
-  line-height: 26px;
-  padding: 0 12px;
-  border-radius: 100px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 12px;
-  font-weight: 500;
-  font-stretch: normal;
-  font-style: normal;
-  letter-spacing: normal;
-}
-
-.vote-status-active {
-  background-color: var(--vote-status-bg-active-color);
-  color: #2fbdf4;
-}
-
-.vote-status-point-active {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #2fbdf4;
-}
-
 .vote-title {
   font-size: 18px;
   font-weight: 600;
@@ -285,7 +224,7 @@
   color: var(--title-color);
 }
 
-.voted-amount, .voted-amount-per {
+.voted-amount, .voted-amount-per, .sponsor-amount, .sponsor-amount-per {
   font-size: 24px;
   font-weight: bold;
   font-stretch: normal;
@@ -294,8 +233,12 @@
   color: var(--wallet-btn-txt-color);
 }
 
-.voted-amount-per {
+.voted-amount-per, .sponsor-amount-per {
   font-size: 16px;
+}
+
+.sponsor-amount, .sponsor-amount-per {
+  color: #d444f1;
 }
 
 .lock-amount-title {
@@ -366,7 +309,7 @@
   color: var(--title-color);
 }
 
-.vote_btn {
+.vote-btn, .sponsor-btn {
   height: 44px;
   border-radius: 10px;
   background-color: #0f68aa;
@@ -383,12 +326,24 @@
   cursor: pointer;
 }
 
+.sponsor-btn {
+  background-color: #d444f1;
+}
+
 .vote-progress-track {
   background-color: #e01f39;
 }
 
 .vote-progress-indicator {
   background-color: #0fc659;
+}
+
+.sponsor-progress-track {
+  background-color: var(--sponsor-track-color);
+}
+
+.sponsor-progress-indicator {
+  background-color: #d444f1;
 }
 
 .burn-progress-track {

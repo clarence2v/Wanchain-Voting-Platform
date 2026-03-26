@@ -29,6 +29,9 @@ const config: Config = {
         },
         customYellow: {
           0: "#f0721c",
+        },
+        customPurple: {
+          0: "#d444f1"
         }
       },
       padding: {

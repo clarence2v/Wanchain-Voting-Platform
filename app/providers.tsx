@@ -11,6 +11,7 @@ import { HeroUIProvider } from "@heroui/react";
 // import { CHAIN_LIST } from '@/sdk/config/config';
 import { Governance } from '@wandevs/governance-contracts-sdk';
 import { wanchainTestnet } from 'viem/chains';
+import { WAN_GOVERNOR_PROXY } from '@/config/address';
 
 type SDKInstance = Governance | null;
 
@@ -18,9 +19,7 @@ const SdkContext = React.createContext<SDKInstance>(null);
 
 function SdkProvider({ children }: { children: React.ReactNode }) {
   const sdk = React.useMemo(() => {
-    const governanceAddr = "0x0C1971761943fb32fE720dA9822AACF0Da5cB87d" as const;
-    const newSdk = new Governance(governanceAddr, wanchainTestnet);
-    console.log('newSdk', newSdk)
+    const newSdk = new Governance(WAN_GOVERNOR_PROXY, wanchainTestnet);
     return newSdk;
   }, [wanchainTestnet])
   return <SdkContext.Provider value={sdk}>{children}</SdkContext.Provider>

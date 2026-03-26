@@ -16,6 +16,7 @@
   --wallet-btn-account-bg-color: #263d5f;
   --wallet-btn-txt-color: #0d5f9a;
   --introduction-border-color: #e9f0f7;
+  --sponsor-track-color: #eaf0f7;
   --proposal-border-purpers-color: rgba(135, 91, 247, 0.3);
   --proposal-bg-purpers-color: rgba(135, 91, 247, 0.1);
   --vote-status-bg-active-color: #e6fafe;
@@ -51,6 +52,7 @@
   --wallet-btn-account-bg-color: #2f4c77;
   --wallet-btn-txt-color: #1c87dc;
   --introduction-border-color: #263d5f;
+  --sponsor-track-color: #1d2f49;
   --proposal-border-purpers-color: rgba(135, 91, 247, 0.7);
   --proposal-bg-purpers-color: rgba(135, 91, 247, 0.1);
   --vote-status-bg-active-color: rgba(46, 187, 242, 0.1);

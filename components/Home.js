@@ -8,9 +8,13 @@ import VoteModal from "./VoteModal";
 import { useSdk } from "@/app/providers";
 import { TESTNET_XP_ADDR } from "@/config/address";
 import { BigNumber } from "bignumber.js";
-import { formatValue, convertArrayItemsBigIntToNumber, handleTime, formatBalance, removeExtraZero, clipString } from "@/utils/utils";
+import { formatValue, convertArrayItemsBigIntToNumber, convertBigIntToNumber, handleTime, formatBalance, removeExtraZero, clipString } from "@/utils/utils";
 import { decodeProposalDescriptionData } from "@wandevs/governance-contracts-sdk";
 import { useRouter } from "next/navigation";
+import CategoryTag from "./CategoryTag";
+import StateTag from "./StateTag";
+import IdTag from "./IdTag";
+// import { ProposalInfoType } from "@/types/proposalTypes"
 
 const LIMIT_NUM = 8;
 const wanDecimal = 18;
@@ -27,45 +31,22 @@ const Banner = () => {
 }
 
 const VoteInfoItem = (props) => {
-  const {
-    type = 1,     // Funding	0	 Technical	1
-    status = 4,  // Canceled	2	Fundraising	3	None	0	Rejected	6	Succeeded	5	UnderReview	1 VotingInProgress 4
+  let {
+    type,     // Funding	0	 Technical	1
+    state,  // Canceled	2	Fundraising	3	None	0	Rejected	6	Succeeded	5	UnderReview	1 VotingInProgress 4
     onOpen,
-    time,
-    requestWanAmount,
-    totalBurnedWanAmount,
-    totalLockingWanAmount,
-    tally,
-    totalVotingWanPower,
-    description,
-    proposer
+    voteInfo
   } = props;
-
+state = 3
   const { theme } = useTheme();
   const router = useRouter();
 
-  const typeName = useMemo(() => {
-    if (type === 1) {
-      return 'Technical'
-    } else {
-      return 'Funding'
-    }
-  }, [type])
-
-  const typeClassName = useMemo(() => {
-    if (typeName === 'Funding') {
-      return 'funding'
-    } else {
-      return 'technical'
-    }
-  }, [typeName])
-
   const yesPercent = useMemo(() => {
-    const yes = formatBalance(tally.yes);
-    const total = formatBalance(totalVotingWanPower)
+    const yes = formatBalance(voteInfo.tally.yes);
+    const total = formatBalance(voteInfo.totalVotingWanPower)
     const per = new BigNumber(yes).div(total).times(100).toFormat(2);
     return removeExtraZero(per);
-  }, [tally, totalVotingWanPower])
+  }, [voteInfo.tally, voteInfo.totalVotingWanPower])
   
   const noPercent = useMemo(() => {
     const per = new BigNumber(100).minus(yesPercent).toFormat(2);
@@ -75,21 +56,20 @@ const VoteInfoItem = (props) => {
     <div className="vote-info-con p-6 rounded-2xl">
       <div className="flex justify-between mb-5">
         <div className="flex">
-          <div className={`vote-type vote-type-${typeClassName} mr-2`}>{typeName}</div>
-          <div className="vote-id">#024</div>
+          <div className="mr-2">
+            <CategoryTag category={type}></CategoryTag>
+          </div>
+          <IdTag id={voteInfo.proposalId}></IdTag>
         </div>
-        <div className={`vote-status vote-status-${status}`}>
-          <div className={`vote-status-point-${status} mr-1.5`}></div>
-          Active
-        </div>
+        <StateTag state={state} showPoint={state === 4}></StateTag>
       </div>
       <div className="vote-title mb-3" onClick={() => {
         router.push('/proposalInfo')
-      }}>{description.title}</div>
+      }}>{voteInfo.description.title}</div>
       <div className="flex items-center mb-4">
         <Image className="normal-icon-size mr-2" src={theme === "light" ? "/pledged_icon_light@3x.webp" : "/pledged_icon_dark@3x.webp"} width={16} height={16} alt="pledged icon" />
         {/* <div className="account-name mr-2">Wanda_Team</div> */}
-        <div className="account-address">({clipString(proposer, 4, 4)})</div>
+        <div className="account-address">({clipString(voteInfo.proposer, 4, 4)})</div>
       </div>
       <div className="vote-info-item-con p-4 mb-4">
         <div className="flex justify-between mb-1">
@@ -99,72 +79,124 @@ const VoteInfoItem = (props) => {
           </div>
           <div className="flex items-center">
             <Image className="small-icon-size mr-1" src={theme === "light" ? "/end_in_icon_light@3x.webp" : "/end_in_icon_dark@3x.webp"} width={14} height={14} alt="end in icon" />
-            <div className="vote-info-item-title">Vote Ends In</div>
+            <div className="vote-info-item-title">{state === 3 ? 'Sponsor' : 'Vote'}&nbsp;Ends In</div>
           </div>
         </div>
         <div className="flex justify-between vote-info-item-value">
           <p>
-            {formatValue(requestWanAmount, wanDecimal)} WAN
+            {formatValue(voteInfo.requestWanAmount, wanDecimal)} WAN
           </p>
           <p>
-            {handleTime(time)}
+            {handleTime(state === 3 ? voteInfo.fundraisingDeadline : voteInfo.voteDeadline)}
           </p>
         </div>
       </div>
-      <div className="vote-info-item-con mb-4">
-        <div className="p-4">
-          <div className="flex items-center mb-2">
-            <Image className="small-icon-size mr-1.5" src={theme === "light" ? "/chart_icon_light@3x.webp" : "/chart_icon_dark@3x.webp"} width={14} height={14} alt="chart icon" />
-            <div className="vote-info-item-title">Current Voted Amount</div>
-          </div>
-          <div className="flex items-center mb-3">
-            <div className="voted-amount">{formatValue(totalVotingWanPower, wanDecimal)}&nbsp;</div>
-            <div className="voted-amount-per pt-0.5">VOTES</div>
-          </div>
-          <div className="flex items-center">
-            <Image className="small-icon-size mr-1.5" src="/lock_icon@3x.webp" width={14} height={14} alt="lock icon" />
-            <div className="lock-amount-title mr-2">Locked</div>
-            <div className="lock-amount-value">{formatValue(totalLockingWanAmount, wanDecimal)} WAN</div>
-            <div className="segmentation mx-4"></div>
-            <Image className="small-icon-size mr-1.5" src="/fire_icon@3x.webp" width={14} height={14} alt="fire icon" />
-            <div className="lock-amount-title mr-2">Burned</div>
-            <div className="lock-amount-value">{formatValue(totalBurnedWanAmount, wanDecimal)} WAN</div>
-          </div>
-        </div>
-        <div className="item-line"></div>
-        <div className="p-4">
-          <div className="vote-sentiment-title mb-2">Vote Sentiment</div>
-          <div className="w-full h-2 mb-2">
-            <Progress
-              classNames={{
-                base: "w-full h-full",
-                track: "vote-progress-track",
-                indicator: "vote-progress-indicator"
-              }}
-              aria-label={`${yesPercent}%`}
-              value={yesPercent}
-            />
-          </div>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center">
-              <Image className="small-icon-size mr-1.5" src="/favor_selected.svg" width={14} height={14} alt="favor icon" />
-              <div className="favor">{yesPercent}%&nbsp;Yes</div>
-            </div>
-            <div className="flex items-center">
-              <div className="against">{noPercent}%&nbsp;No</div>
-              <Image className="small-icon-size ml-1.5" src="/against_selected.svg" width={14} height={14} alt="against icon" />
+      {
+        state === 3 ? (
+          <div className="vote-info-item-con mb-4">
+            <div className="p-4">
+              <div className="flex items-center mb-2">
+                <Image className="small-icon-size mr-1.5" src={theme === "light" ? "/sponsor_btn_icon_light.webp" : "/sponsor_btn_icon_dark.webp"} width={14} height={14} alt="chart icon" />
+                <div className="vote-info-item-title">Current Voted Amount</div>
+              </div>
+              <div className="flex items-center mb-3">
+                <div className="sponsor-amount">{formatValue(voteInfo.totalPledgingWanPower, wanDecimal)}&nbsp;</div>
+                <div className="sponsor-amount-per pt-0.5">VOTES</div>
+              </div>
+              <div className="w-full h-2 mb-2">
+                <Progress
+                  classNames={{
+                    base: "w-full h-full",
+                    track: "sponsor-progress-track",
+                    indicator: "sponsor-progress-indicator"
+                  }}
+                  aria-label={`${yesPercent}%`}
+                  value={yesPercent}
+                />
+              </div>
+              <div className="flex items-center">
+                <Image className="small-icon-size mr-1.5" src="/lock_icon@3x.webp" width={14} height={14} alt="lock icon" />
+                <div className="lock-amount-title mr-2">Gap (Lock)</div>
+                <div className="lock-amount-value">{formatValue(voteInfo.totalWanAmount - voteInfo.totalBurnedWanAmount, wanDecimal)} WAN</div>
+                <div className="segmentation mx-4"></div>
+                <Image className="small-icon-size mr-1.5" src="/fire_icon@3x.webp" width={14} height={14} alt="fire icon" />
+                <div className="lock-amount-title mr-2">Gap (Burn)</div>
+                <div className="lock-amount-value">{formatValue(voteInfo.totalBurnedWanAmount, wanDecimal)} WAN</div>
+              </div>
             </div>
           </div>
-          <div className="flex justify-between items-center">
-            <div className="vote-sentiment-value">{formatValue(tally.yes, wanDecimal)} VOTES</div>
-            <div className="vote-sentiment-value">{formatValue(tally.no, wanDecimal)} VOTES</div>
+        ) : (
+          <div className="vote-info-item-con mb-4">
+            <div className="p-4">
+              <div className="flex items-center mb-2">
+                <Image className="small-icon-size mr-1.5" src={theme === "light" ? "/chart_icon_light@3x.webp" : "/chart_icon_dark@3x.webp"} width={14} height={14} alt="chart icon" />
+                <div className="vote-info-item-title">Current Voted Amount</div>
+              </div>
+              <div className="flex items-center mb-3">
+                <div className="voted-amount">{formatValue(voteInfo.totalVotingWanPower, wanDecimal)}&nbsp;</div>
+                <div className="voted-amount-per pt-0.5">VOTES</div>
+              </div>
+              <div className="flex items-center">
+                <Image className="small-icon-size mr-1.5" src="/lock_icon@3x.webp" width={14} height={14} alt="lock icon" />
+                <div className="lock-amount-title mr-2">Locked</div>
+                <div className="lock-amount-value">{formatValue(voteInfo.totalWanAmount - voteInfo.totalBurnedWanAmount, wanDecimal)} WAN</div>
+                <div className="segmentation mx-4"></div>
+                <Image className="small-icon-size mr-1.5" src="/fire_icon@3x.webp" width={14} height={14} alt="fire icon" />
+                <div className="lock-amount-title mr-2">Burned</div>
+                <div className="lock-amount-value">{formatValue(voteInfo.totalBurnedWanAmount, wanDecimal)} WAN</div>
+              </div>
+            </div>
+            <div className="item-line"></div>
+            <div className="p-4">
+              <div className="vote-sentiment-title mb-2">Vote Sentiment</div>
+              <div className="w-full h-2 mb-2">
+                <Progress
+                  classNames={{
+                    base: "w-full h-full",
+                    track: "vote-progress-track",
+                    indicator: "vote-progress-indicator"
+                  }}
+                  aria-label={`${yesPercent}%`}
+                  value={yesPercent}
+                />
+              </div>
+              <div className="flex justify-between items-center mb-1">
+                <div className="flex items-center">
+                  <Image className="small-icon-size mr-1.5" src="/favor_selected.svg" width={14} height={14} alt="favor icon" />
+                  <div className="favor">{yesPercent}%&nbsp;Yes</div>
+                </div>
+                <div className="flex items-center">
+                  <div className="against">{noPercent}%&nbsp;No</div>
+                  <Image className="small-icon-size ml-1.5" src="/against_selected.svg" width={14} height={14} alt="against icon" />
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="vote-sentiment-value">{formatValue(voteInfo.tally.yes, wanDecimal)} VOTES</div>
+                <div className="vote-sentiment-value">{formatValue(voteInfo.tally.no, wanDecimal)} VOTES</div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      <div className="vote_btn" onClick={() => onOpen({})}>
-        Vote Now&nbsp;
-        <Image className="large-icon-size" src="/right_arrow.svg" width={20} height={20} alt="arrow icon" />
-      </div>
+        )
+      }
+      {
+        ![4, 3].includes(state) ? null : (
+          <>
+            {
+              state === 4 ? (
+                <div className="vote-btn" onClick={() => onOpen({})}>
+                  Vote Now&nbsp;
+                  <Image className="large-icon-size" src="/right_arrow.svg" width={20} height={20} alt="arrow icon" />
+                </div>
+              ) : (
+                <div className="sponsor-btn" onClick={() => onOpen({})}>
+                  Sponsor Now&nbsp;
+                  <Image className="large-icon-size" src="/sponsor_btn_icon.svg" width={20} height={20} alt="sponsor icon" />
+                </div>
+              )
+            }
+          </>
+        )
+      }
     </div>
   )
 }
@@ -175,7 +207,7 @@ export default function Home() {
   const { theme } = useTheme();
   const sdk = useSdk();
   const {isOpen, onOpen, onClose} = useDisclosure();
-  const [curVoteInfo, setCurVoteInfo] = useState();
+  const [curVoteInfo, setCurVoteInfo] = useState({});
   const [baseInfo, setBaseInfo] = useState({
     totalProposals: '-',
     activeProposals: '-',
@@ -198,6 +230,7 @@ export default function Home() {
   const [failedProposalsArr, setFailedProposalsArr] = useState([]);
 
   const handleModal = (info) => {
+    console.log('cur voteInfo', info)
     setCurVoteInfo(info);
     onOpen();
   }
@@ -213,7 +246,15 @@ export default function Home() {
 
   useEffect(() => {
     const getInfo = async () => {
-      const baseRes = await sdk.getBaseParameters();
+      let baseRes = await sdk.getBaseParameters();
+      baseRes = convertBigIntToNumber(baseRes)
+      const {
+        votingWanMultiplierCount,
+        proposalWanMultiplierCount,
+        prospectiveProposalCount,
+        succeededProposalCount,
+        failedProposalCount,
+      } = baseRes
       const treasuryAddr = baseRes.wanTreasury;
       const treasuryBalance = await sdk.publicClient.getBalance({
         address: treasuryAddr
@@ -231,6 +272,11 @@ export default function Home() {
         allProposalBurnedWanAmount: new BigNumber(baseRes.allProposalBurnedWanAmount).div(Math.pow(10, wanDecimal)).toString(10),
         allProposalLockingWanAmount: new BigNumber(baseRes.allProposalWanAmount).minus(baseRes.allProposalBurnedWanAmount).div(Math.pow(10, wanDecimal)).toString(10),
         allProposalWanAmount: new BigNumber(baseRes.allProposalWanAmount).div(Math.pow(10, wanDecimal)).toString(10),
+        votingWanMultiplierCount,
+        proposalWanMultiplierCount,
+        prospectiveProposalCount,
+        succeededProposalCount,
+        failedProposalCount
       }
       console.log('voteBaseInfo', voteBaseInfo, voteBaseInfo.allProposalBurnedWanAmount/voteBaseInfo.allProposalWanAmount*100)
       setBaseInfo(voteBaseInfo)
@@ -267,7 +313,7 @@ export default function Home() {
   }, [allProposalsIndex, sdk, allProposalsArr])
 
   const fetchActiveProposalsInfo = useCallback(async () => {
-    if (activeProposalsIndex === -1) return;
+    if (activeProposalsIndex === -1 || Number(baseInfo.activeProposals) === 0) return;
     const res = await sdk.getRecentVotingProposals({
       start: activeProposalsIndex,
       limit: LIMIT_NUM
@@ -279,7 +325,7 @@ export default function Home() {
   }, [activeProposalsIndex, sdk, activeProposalsArr])
 
   const fetchProspectiveProposalsInfo = useCallback(async () => {
-    if (prospectiveProposalsIndex === -1) return;
+    if (prospectiveProposalsIndex === -1 || baseInfo.prospectiveProposalCount === 0) return;
     const res = await sdk.getRecentProspectiveProposals({
       start: prospectiveProposalsIndex,
       limit: LIMIT_NUM
@@ -291,7 +337,7 @@ export default function Home() {
   }, [prospectiveProposalsIndex, sdk, prospectiveProposalsArr])
 
   const fetchPassedProposalsInfo = useCallback(async () => {
-    if (passedProposalsIndex === -1) return;
+    if (passedProposalsIndex === -1 || baseInfo.succeededProposalCount === 0) return;
     const res = await sdk.getRecentSucceededProposals({
       start: passedProposalsIndex,
       limit: LIMIT_NUM
@@ -303,7 +349,7 @@ export default function Home() {
   }, [passedProposalsIndex, sdk, passedProposalsArr])
 
   const fetchFailedProposalsInfo = useCallback(async () => {
-    if (failedProposalsIndex === -1) return;
+    if (failedProposalsIndex === -1 || baseInfo.failedProposalCount === 0) return;
     const res = await sdk.getRecentRejectedProposals({
       start: failedProposalsIndex,
       limit: LIMIT_NUM
@@ -491,15 +537,9 @@ export default function Home() {
                       <VoteInfoItem
                         key={k}
                         type={v.category}
-                        onOpen={(info) => handleModal(info)}
-                        time={Number(v.voteDeadline)}
-                        requestWanAmount={v.requestWanAmount}
-                        totalBurnedWanAmount={v.totalBurnedWanAmount}
-                        totalLockingWanAmount={v.totalWanAmount - v.totalBurnedWanAmount}
-                        totalVotingWanPower={v.totalVotingWanPower}
-                        tally={v.tally}
-                        description={v.description}
-                        proposer={v.proposer}
+                        state={v.state}
+                        onOpen={() => handleModal(v)}
+                        voteInfo={v}
                       />
                     ))
                   }
@@ -517,7 +557,9 @@ export default function Home() {
                       <VoteInfoItem
                         key={k}
                         type={v.category}
-                        onOpen={(info) => handleModal(info)}
+                        state={v.state}
+                        onOpen={() => handleModal(v)}
+                        voteInfo={v}
                       />
                     ))
                   }
@@ -535,7 +577,9 @@ export default function Home() {
                       <VoteInfoItem
                         key={k}
                         type={v.category}
-                        onOpen={(info) => handleModal(info)}
+                        state={v.state}
+                        onOpen={() => handleModal(v)}
+                        voteInfo={v}
                       />
                     ))
                   }
@@ -553,7 +597,9 @@ export default function Home() {
                       <VoteInfoItem
                         key={k}
                         type={v.category}
-                        onOpen={(info) => handleModal(info)}
+                        state={v.state}
+                        onOpen={() => handleModal(v)}
+                        voteInfo={v}
                       />
                     ))
                   }
@@ -571,7 +617,9 @@ export default function Home() {
                       <VoteInfoItem
                         key={k}
                         type={v.category}
-                        onOpen={(info) => handleModal(info)}
+                        state={v.state}
+                        onOpen={() => handleModal(v)}
+                        voteInfo={v}
                       />
                     ))
                   }
@@ -593,6 +641,9 @@ export default function Home() {
       <VoteModal
         onClose={onClose}
         isOpen={isOpen}
+        proposalInfo={curVoteInfo}
+        votingWanMultiplierCount={baseInfo?.votingWanMultiplierCount}
+        proposalWanMultiplierCount={baseInfo?.proposalWanMultiplierCount}
       />
     </div>
   );

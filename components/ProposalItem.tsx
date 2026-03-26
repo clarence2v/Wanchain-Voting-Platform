@@ -1,11 +1,16 @@
 import "./ProposalItem.css";
 import Image from "next/image";
 import { handleTime } from "@/utils/utils";
+import CategoryTag from "./CategoryTag";
+import { ProposalCategory, ProposalState } from "@wandevs/governance-contracts-sdk";
+import StateTag from "./StateTag";
+import IdTag from "./IdTag";
+import { HexType } from "@/types/proposalTypes";
 
 const ProposalItem = ({
   id,
   type,
-  status,
+  state,
   choice,
   stake,
   burn,
@@ -14,9 +19,9 @@ const ProposalItem = ({
   endTime,
   title
 }: {
-  id: string
-  type?: string
-  status: string
+  id: HexType
+  type: ProposalCategory
+  state: ProposalState
   choice: string
   stake: string
   burn: string
@@ -25,21 +30,6 @@ const ProposalItem = ({
   endTime: string
   title: string
 }) => {
-  const typeClassName = type === 'Technical' ? 'proposals-type-technical' : 'proposals-type-funding';
-  const statusClassName = (value: string) => {
-    switch(value) {
-      case 'Active':
-        return 'proposals-status-active';
-      case 'Passed':
-        return 'proposals-status-passed';
-      case 'Failed':
-        return 'proposals-status-failed';
-      case 'Prospective':
-        return 'proposals-status-prospective';
-      default:
-        return 'proposals-status-active';
-    }
-  }
   const choiceTxt = (value: string) => {
     if (value === 'yes') {
       return (
@@ -93,13 +83,13 @@ const ProposalItem = ({
     <div className="proposals-item-con p-6 mb-4">
       <div className="flex justify-between">
         <div className="flex">
-          <div className="proposals-id">#{id}</div>
-          {
-            type ? (
-              <div className={`proposals-type ${typeClassName}`}>{type}</div>
-            ) : null
-          }
-          <div className={`proposals-status ${statusClassName(status)}`}>{status}</div>
+          <div className="mr-2.5">
+            <IdTag id={id}></IdTag>
+          </div>
+          <div className="mr-2.5">
+            <CategoryTag category={type}></CategoryTag>
+          </div>
+          <StateTag state={state}></StateTag>
         </div>
         <div className="proposals-info-con">
           <div className="proposals-info-item">

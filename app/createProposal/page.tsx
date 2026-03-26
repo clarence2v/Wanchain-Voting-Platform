@@ -3,18 +3,18 @@ import "./page.css";
 import Image from "next/image";
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { SVGProps, useMemo, useState } from "react";
+import { SVGProps, useEffect, useMemo, useState } from "react";
 import { Select, SelectItem, Input } from "@heroui/react";
 import fundingLightIcon from '@image/funding_icon_light.webp'
 import fundingDarkIcon from '@image/funding_icon_dark.webp'
 import technicalLightIcon from '@image/technical_icon_light.webp'
 import technicalDarkIcon from '@image/technical_icon_dark.webp'
-import { isNumber } from "@/utils/utils";
+import { isNumber, formatBalance } from "@/utils/utils";
 import { JSX } from "react/jsx-runtime";
 import { useSdk } from "@/app/providers";
 import { encodeProposalDescriptionData } from "@wandevs/governance-contracts-sdk";
 import { useAccount } from "wagmi";
-import { erc20Abi } from "viem";
+import { erc20Abi, maxUint256 } from "viem";
 import {
   simulateContract,
   writeContract,
@@ -24,6 +24,7 @@ import {
 import { walletConfig } from "../wagmi";
 import BigNumber from "bignumber.js";
 import ConfirmModal from "@/components/ConfirmModal";
+import { WAN_GOVERNOR_PROXY, TESTNET_XP_ADDR } from "@/config/address";
 
 const MailIcon = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) => {
   return (
@@ -78,6 +79,8 @@ export default function Proposals() {
   const [emailValue, setEmailValue] = useState('');
   const [userNameValue, setUserNameValue] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [minAmount, setMinAmount] = useState(0);
+  const [treasuryBalance, setTreasuryBalance] = useState('0');
   const typeArr = useMemo(() => {
     return [{
     label: 'Funding',
@@ -87,6 +90,29 @@ export default function Proposals() {
     icon: isdark ? technicalDarkIcon : technicalLightIcon
   }]
   }, [isdark])
+
+
+  useEffect(() => {
+    const getInfo = async () => {
+      if (!sdk) {
+        console.error('sdk init')
+        return
+      }
+      const baseRes = await sdk.getBaseParameters();
+      console.log('baseRes', baseRes)
+      const {
+        minParticipationAmount
+      } = baseRes;
+      setMinAmount(Number(minParticipationAmount))
+
+      const treasuryAddr = baseRes.wanTreasury;
+      const treasuryOriginalBalance = await sdk.publicClient.getBalance({
+        address: treasuryAddr
+      })
+      setTreasuryBalance(formatBalance(treasuryOriginalBalance))
+    }
+    getInfo();
+  }, [sdk])
 
   const handleRequestValue = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
@@ -157,17 +183,18 @@ export default function Proposals() {
     setPledgeValue('');
   }
 
+  const handleHiddenModal = () => setShowConfirmModal(false)
+
   const checkAllowance = async () => {
     if (!address || !sdk) {
       console.error('sdk init or not connect')
       return;
     }
-    const governanceAddr = "0x0C1971761943fb32fE720dA9822AACF0Da5cB87d" as const;
     const allowance = await sdk.publicClient.readContract({
-      address: '0x23ffb9307350e7121Ab4041460f5397b1b024d6C',
+      address: TESTNET_XP_ADDR,
       abi: erc20Abi,
       functionName: 'allowance',
-      args: [address, governanceAddr],
+      args: [address, WAN_GOVERNOR_PROXY],
     });
 
     // allowance: bigint
@@ -176,24 +203,18 @@ export default function Proposals() {
   }
 
   const handleApprove = async () => {
-    const amountBigInt = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-    const governanceAddr = '0x0C1971761943fb32fE720dA9822AACF0Da5cB87d' as const;
-    const xpAddr = '0x23ffb9307350e7121Ab4041460f5397b1b024d6C'
-
-    // 2. simulate：检查调用是否会 revert，生成正确的 request
-    const { request } = await simulateContract(walletConfig, {
-      address: xpAddr,
+    const { request, result } = await simulateContract(walletConfig, {
+      address: TESTNET_XP_ADDR,
       abi: erc20Abi,
       functionName: 'approve',
-      args: [governanceAddr, BigInt(amountBigInt)],
+      args: [WAN_GOVERNOR_PROXY, maxUint256],
+      // args: [WAN_GOVERNOR_PROXY, BigInt(1000*Math.pow(10, 18))], not allow use maxUint256
       account: address,
     });
-
-    // 3. 真正发交易
+    console.log('request', request, result)
     const hash = await writeContract(walletConfig, request);
     console.log('approve tx hash', hash);
 
-    // 4. 等待上链确认（可选）
     const receipt = await waitForTransactionReceipt(walletConfig, { hash });
     console.log('approve receipt', receipt);
 
@@ -218,22 +239,24 @@ export default function Proposals() {
     const pledgeType = voteValue === 'lock' ? 2 : 1;
     const description = encodeProposalDescriptionData(version, proposalTitle, descriptionValue, emailValue, userNameValue);
     const pledgeNum = BigInt(new BigNumber(pledgeValue).times(Math.pow(10, 18)).toString())
+    if (new BigNumber(pledgeNum).lt(minAmount)) {
+      console.error('invalid amount')
+      return;
+    }
     const requestNum = BigInt(new BigNumber(requestValue).times(Math.pow(10, 18)).toString())
-
+    if (new BigNumber(requestNum).gt(treasuryBalance)) {
+      console.error('The requested amount must not exceed 10% of the Community Treasury.')
+      return;
+    }
     const request = await sdk.buildCreateProposalTx(address, pledgeNum, requestNum, category, pledgeType, description);
-    // var signature = await walletClient.signTransaction(request);
-    // console.log("signature:", signature);
-
-    // const hash = await sdk.publicClient.sendRawTransaction({ serializedTransaction: signature });
-    // console.log('hash: ', hash)
-    // 2. 先用 signTransaction 生成签名好的原始交易（serialized tx）
     const hash = await sendTransaction(walletConfig, request);
-
     console.log('raw tx hash', hash);
 
-    // 4. 等待上链（可选）
     const receipt = await waitForTransactionReceipt( walletConfig, { hash });
     console.log('raw tx receipt', receipt);
+
+    handleHiddenModal();
+    handleCancel();
   }
 
   return (
@@ -516,7 +539,7 @@ export default function Proposals() {
       </div>
       <ConfirmModal
         isOpen={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
+        onClose={handleHiddenModal}
         onConfirm={handleSubmit}
       ></ConfirmModal>
     </div>

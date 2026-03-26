@@ -16,7 +16,7 @@ export default function Proposals() {
     {
       id: '23',
       type: 'Technical',
-      status: 'Active',
+      state: 'Active',
       choice: 'yes',
       stake: '500',
       burn: '0',
@@ -28,7 +28,7 @@ export default function Proposals() {
     {
       id: '19',
       type: 'Funding',
-      status: 'Passed',
+      state: 'Passed',
       choice: 'no',
       stake: '100',
       burn: '50',
@@ -40,7 +40,7 @@ export default function Proposals() {
     {
       id: '15',
       type: 'Technical',
-      status: 'Failed',
+      state: 'Failed',
       choice: 'yes',
       stake: '2000',
       burn: '0',
@@ -52,7 +52,7 @@ export default function Proposals() {
     {
       id: '28',
       type: 'Technical',
-      status: 'Prospective',
+      state: 'Prospective',
       choice: 'yes',
       stake: '500',
       burn: '0',
@@ -68,12 +68,14 @@ export default function Proposals() {
         console.error('sdk init or not connect', sdk, address)
         return;
       }
-      const count = await sdk.getAccountProposalCount(address)
-      if (Number(count) === 0) return;
+      const res = await sdk.getAccountProposalCount(address)
+      console.log('count', res)
+      const count = Number(res.proposerProposalCount)
+      if (count === 0) return;
       console.log('count proposal', count)
       const data = await sdk.getProposerProposals(address, {
         start: 0,
-        end: 0
+        end: Math.max(count - 1, 0)
       })
       console.log('data', data)
     }
@@ -92,13 +94,13 @@ export default function Proposals() {
         My Proposals
       </div>
       <div>
-        {
+        {/* {
           arr.map((v, k) => (
             <ProposalItem
               key={k}
-              id={v.id}
+              id={`0x${v.id}`}
               type={v.type}
-              status={v.status}
+              state={v.state}
               choice={v.choice}
               stake={v.stake}
               burn={v.burn}
@@ -108,7 +110,7 @@ export default function Proposals() {
               title={v.title}
             />
           ))
-        }
+        } */}
       </div>
     </div>
   )

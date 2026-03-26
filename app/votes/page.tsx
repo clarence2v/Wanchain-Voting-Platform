@@ -15,7 +15,7 @@ export default function Votes() {
   const arr = [
     {
       id: '23',
-      status: 'Active',
+      state: 'Active',
       choice: 'yes',
       stake: '500',
       burn: '0',
@@ -26,7 +26,7 @@ export default function Votes() {
     },
     {
       id: '19',
-      status: 'Passed',
+      state: 'Passed',
       choice: 'no',
       stake: '100',
       burn: '50',
@@ -37,7 +37,7 @@ export default function Votes() {
     },
     {
       id: '15',
-      status: 'Failed',
+      state: 'Failed',
       choice: 'yes',
       stake: '2000',
       burn: '0',
@@ -48,7 +48,7 @@ export default function Votes() {
     },
     {
       id: '28',
-      status: 'Prospective',
+      state: 'Prospective',
       choice: 'yes',
       stake: '500',
       burn: '0',
@@ -93,7 +93,7 @@ export default function Votes() {
             <ProposalItem
               key={k}
               id={v.id}
-              status={v.status}
+              state={v.state}
               choice={v.choice}
               stake={v.stake}
               burn={v.burn}
