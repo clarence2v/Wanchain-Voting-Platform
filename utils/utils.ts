@@ -11,10 +11,10 @@ export const copyTxt2Clipboard = (text: string) => {
 };
 
 export const handleTime = (time: string | number) => {
-  const timeNum = Number(time) / 1000;
+  const timeNum = Number(time);
   const day = Math.floor(timeNum / 86400);
   const hour = Math.ceil((timeNum - day * 86400) / 3600);
-  return `${day}d ${hour}h`;
+  return `${day > 0 ? day + 'd ': ''}${hour}h`;
 }
 
 export const handleTimeThMaxPer = (time: string | number, isLower?: boolean) => {
@@ -27,6 +27,9 @@ export const handleTimeThMaxPer = (time: string | number, isLower?: boolean) => 
   } else if (day >= 30) {
     const month = Math.floor(day / 30);
     str =  `${month} Month${month > 1 ? 's' : ''}`
+  } else if (day >= 7) {
+    const week = Math.floor(day / 7);
+    str =  `${week} Day${week > 1 ? 's' : ''}`
   } else if (day >= 1) {
     str =  `${day} Day${day > 1 ? 's' : ''}`
   } else {
@@ -125,9 +128,9 @@ export function convertArrayItemsBigIntToNumber(arr: Array<any>) {
 }
 
 export function isNumber(val: any) {
-  const regPos = /^\d+(\.\d+)?$/ // 非负浮点数
+  const regPos = /^\d+(\.\d+)?$/
   const regNeg =
-    /^(-(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*)))$/ // 负浮点数
+    /^(-(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*)))$/
   return !!(regPos.test(val) || regNeg.test(val))
 }
 

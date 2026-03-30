@@ -198,6 +198,7 @@
   letter-spacing: normal;
   text-align: left;
   color: var(--discription-color);
+  cursor: pointer;
 }
 
 .vote-info-item-con {
@@ -332,6 +333,10 @@
 
 .vote-progress-track {
   background-color: #e01f39;
+}
+
+.vote-progress-no-burn-track {
+  background-color: var(--proposal-creation-txt-color);
 }
 
 .vote-progress-indicator {

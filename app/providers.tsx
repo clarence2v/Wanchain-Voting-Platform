@@ -3,32 +3,29 @@
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
-import { ThemeProvider } from 'next-themes';
-import { RainbowKitProvider, darkTheme, lightTheme, AvatarComponent } from '@rainbow-me/rainbowkit';
+import { ThemeProvider, useTheme } from 'next-themes';
+import { RainbowKitProvider, darkTheme, lightTheme } from '@rainbow-me/rainbowkit';
+import { HeroUIProvider } from '@heroui/react';
 import { walletConfig } from './wagmi';
-import { useTheme } from 'next-themes';
-import { HeroUIProvider } from "@heroui/react";
-// import { CHAIN_LIST } from '@/sdk/config/config';
 import { Governance } from '@wandevs/governance-contracts-sdk';
 import { wanchainTestnet } from 'viem/chains';
 import { WAN_GOVERNOR_PROXY } from '@/config/address';
 
 type SDKInstance = Governance | null;
-
 const SdkContext = React.createContext<SDKInstance>(null);
 
 function SdkProvider({ children }: { children: React.ReactNode }) {
   const sdk = React.useMemo(() => {
-    const newSdk = new Governance(WAN_GOVERNOR_PROXY, wanchainTestnet);
-    return newSdk;
-  }, [wanchainTestnet])
-  return <SdkContext.Provider value={sdk}>{children}</SdkContext.Provider>
+    return new Governance(WAN_GOVERNOR_PROXY, wanchainTestnet);
+  }, []);
+
+  return <SdkContext.Provider value={sdk}>{children}</SdkContext.Provider>;
 }
 
 export function useSdk() {
   const sdk = React.useContext(SdkContext);
   if (!sdk) {
-    console.warn('sdk uninstall');
+    console.warn('sdk not initialized');
   }
   return sdk;
 }
@@ -39,8 +36,8 @@ function ThemedRainbowKitProvider({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
 
   return (
-    <RainbowKitProvider 
-      showRecentTransactions={true}
+    <RainbowKitProvider
+      showRecentTransactions
       modalSize="compact"
       theme={theme === 'dark' ? darkTheme() : lightTheme()}
     >
@@ -50,10 +47,12 @@ function ThemedRainbowKitProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const { theme, setTheme } = useTheme();
-
   return (
-    <ThemeProvider attribute="class">
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      enableSystem={false}
+    >
       <HeroUIProvider>
         <WagmiProvider config={walletConfig}>
           <QueryClientProvider client={queryClient}>
@@ -67,8 +66,4 @@ export function Providers({ children }: { children: React.ReactNode }) {
       </HeroUIProvider>
     </ThemeProvider>
   );
-}
-
-export async function getServerSnapshot() {
-  return {};
 }

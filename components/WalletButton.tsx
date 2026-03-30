@@ -41,16 +41,11 @@ function WalletButtonInner({
     chain &&
     (!authenticationStatus || authenticationStatus === 'authenticated');
 
-  // ✅ 只在 account 变化时重新生成渐变
   const bgColor = useMemo(() => {
-    // 你也可以用 account?.address 做 seed，保证同一个地址渐变稳定
-    // if (!account) return randomCssGradient();
-    // return randomCssGradient();
-    if (!account?.address) return randomCssGradient2();
+    if (!account?.address) return randomCssGradient2('');
     return randomCssGradient2(account?.address);
-  }, [account?.address]); // 建议依赖地址，而不是整个 account 对象
+  }, [account?.address]);
 
-  // 不要在未 ready 时渲染可交互内容
   if (!ready) {
     return (
       <div
@@ -60,7 +55,6 @@ function WalletButtonInner({
     );
   }
 
-  // 未连接：显示「连接钱包」按钮
   if (!connected) {
     return (
       <button
@@ -80,7 +74,6 @@ function WalletButtonInner({
     );
   }
 
-  // 链接有问题（错误网络）
   if (chain?.unsupported) {
     return (
       <button
@@ -93,7 +86,6 @@ function WalletButtonInner({
     );
   }
 
-  // 已连接时：左边显示余额，右边显示账户
   return (
     <div className="flex gap-2">
       {account.displayBalance ? (

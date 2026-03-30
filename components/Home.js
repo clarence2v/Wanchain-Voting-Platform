@@ -8,16 +8,25 @@ import VoteModal from "./VoteModal";
 import { useSdk } from "@/app/providers";
 import { TESTNET_XP_ADDR } from "@/config/address";
 import { BigNumber } from "bignumber.js";
-import { formatValue, convertArrayItemsBigIntToNumber, convertBigIntToNumber, handleTime, formatBalance, removeExtraZero, clipString } from "@/utils/utils";
+import { formatValue, convertArrayItemsBigIntToNumber, convertBigIntToNumber, handleTime, formatBalance, removeExtraZero, clipString, copyTxt2Clipboard } from "@/utils/utils";
 import { decodeProposalDescriptionData } from "@wandevs/governance-contracts-sdk";
 import { useRouter } from "next/navigation";
 import CategoryTag from "./CategoryTag";
 import StateTag from "./StateTag";
 import IdTag from "./IdTag";
+import { wanDecimal } from "@/config/config";
 // import { ProposalInfoType } from "@/types/proposalTypes"
 
+// test
+// import { toHex } from "viem";
+// import { useAccount } from "wagmi";
+// import {
+//   waitForTransactionReceipt,
+//   sendTransaction,
+// } from '@wagmi/core';
+// import { walletConfig } from "@/app/wagmi";
+
 const LIMIT_NUM = 8;
-const wanDecimal = 18;
 
 const Banner = () => {
   return (
@@ -31,17 +40,18 @@ const Banner = () => {
 }
 
 const VoteInfoItem = (props) => {
-  let {
-    type,     // Funding	0	 Technical	1
+  const {
+    category,     // Funding	0	 Technical	1
     state,  // Canceled	2	Fundraising	3	None	0	Rejected	6	Succeeded	5	UnderReview	1 VotingInProgress 4
     onOpen,
     voteInfo
   } = props;
-state = 3
   const { theme } = useTheme();
+  const isdark = useMemo(() => theme === 'dark', [theme])
   const router = useRouter();
 
   const yesPercent = useMemo(() => {
+    if (voteInfo.totalVotingWanPower === 0) return '0';
     const yes = formatBalance(voteInfo.tally.yes);
     const total = formatBalance(voteInfo.totalVotingWanPower)
     const per = new BigNumber(yes).div(total).times(100).toFormat(2);
@@ -49,36 +59,52 @@ state = 3
   }, [voteInfo.tally, voteInfo.totalVotingWanPower])
   
   const noPercent = useMemo(() => {
-    const per = new BigNumber(100).minus(yesPercent).toFormat(2);
+    if (voteInfo.totalVotingWanPower === 0) return '0';
+    const no = formatBalance(voteInfo.tally.no);
+    const total = formatBalance(voteInfo.totalVotingWanPower)
+    const per = new BigNumber(no).div(total).times(100).toFormat(2);
     return removeExtraZero(per);
-  }, [yesPercent])
+  }, [voteInfo.tally, voteInfo.totalVotingWanPower])
+
+  const leftTime = useMemo(() => {
+    if (!voteInfo) return 'N/A'
+    const curTime = new Date().getTime() / 1000
+    const deadLine = voteInfo.state === 3 ? voteInfo.fundraisingDeadline : voteInfo.voteDeadline
+    if (curTime > deadLine) {
+      return 'Ended'
+    } else if (deadLine === 0) {
+      return 'N/A'
+    } else {
+      return handleTime(deadLine - curTime)
+    }
+  }, [voteInfo?.state, voteInfo?.fundraisingDeadline, voteInfo?.voteDeadline])
   return (
     <div className="vote-info-con p-6 rounded-2xl">
       <div className="flex justify-between mb-5">
         <div className="flex">
           <div className="mr-2">
-            <CategoryTag category={type}></CategoryTag>
+            <CategoryTag category={category}></CategoryTag>
           </div>
           <IdTag id={voteInfo.proposalId}></IdTag>
         </div>
         <StateTag state={state} showPoint={state === 4}></StateTag>
       </div>
       <div className="vote-title mb-3" onClick={() => {
-        router.push('/proposalInfo')
+        router.push(`/proposalInfo?proposalId=${voteInfo?.proposalId}`)
       }}>{voteInfo.description.title}</div>
       <div className="flex items-center mb-4">
-        <Image className="normal-icon-size mr-2" src={theme === "light" ? "/pledged_icon_light@3x.webp" : "/pledged_icon_dark@3x.webp"} width={16} height={16} alt="pledged icon" />
+        <Image className="normal-icon-size mr-2" src={!isdark ? "/pledged_icon_light@3x.webp" : "/pledged_icon_dark@3x.webp"} width={16} height={16} alt="pledged icon" />
         {/* <div className="account-name mr-2">Wanda_Team</div> */}
-        <div className="account-address">({clipString(voteInfo.proposer, 4, 4)})</div>
+        <div className="account-address" onClick={() => copyTxt2Clipboard(voteInfo.proposer)}>({clipString(voteInfo.proposer, 4, 4)})</div>
       </div>
       <div className="vote-info-item-con p-4 mb-4">
         <div className="flex justify-between mb-1">
           <div className="flex items-center">
-            <Image className="small-icon-size mr-1" src={theme === "light" ? "/doller_icon_light@3x.webp" : "/doller_icon_dark@3x.webp"} width={14} height={14} alt="doller icon" />
+            <Image className="small-icon-size mr-1" src={!isdark ? "/doller_icon_light@3x.webp" : "/doller_icon_dark@3x.webp"} width={14} height={14} alt="doller icon" />
             <div className="vote-info-item-title">Request</div>
           </div>
           <div className="flex items-center">
-            <Image className="small-icon-size mr-1" src={theme === "light" ? "/end_in_icon_light@3x.webp" : "/end_in_icon_dark@3x.webp"} width={14} height={14} alt="end in icon" />
+            <Image className="small-icon-size mr-1" src={!isdark ? "/end_in_icon_light@3x.webp" : "/end_in_icon_dark@3x.webp"} width={14} height={14} alt="end in icon" />
             <div className="vote-info-item-title">{state === 3 ? 'Sponsor' : 'Vote'}&nbsp;Ends In</div>
           </div>
         </div>
@@ -87,7 +113,7 @@ state = 3
             {formatValue(voteInfo.requestWanAmount, wanDecimal)} WAN
           </p>
           <p>
-            {handleTime(state === 3 ? voteInfo.fundraisingDeadline : voteInfo.voteDeadline)}
+            {leftTime}
           </p>
         </div>
       </div>
@@ -96,7 +122,7 @@ state = 3
           <div className="vote-info-item-con mb-4">
             <div className="p-4">
               <div className="flex items-center mb-2">
-                <Image className="small-icon-size mr-1.5" src={theme === "light" ? "/sponsor_btn_icon_light.webp" : "/sponsor_btn_icon_dark.webp"} width={14} height={14} alt="chart icon" />
+                <Image className="small-icon-size mr-1.5" src={!isdark ? "/sponsor_btn_icon_light.webp" : "/sponsor_btn_icon_dark.webp"} width={14} height={14} alt="chart icon" />
                 <div className="vote-info-item-title">Current Voted Amount</div>
               </div>
               <div className="flex items-center mb-3">
@@ -129,7 +155,7 @@ state = 3
           <div className="vote-info-item-con mb-4">
             <div className="p-4">
               <div className="flex items-center mb-2">
-                <Image className="small-icon-size mr-1.5" src={theme === "light" ? "/chart_icon_light@3x.webp" : "/chart_icon_dark@3x.webp"} width={14} height={14} alt="chart icon" />
+                <Image className="small-icon-size mr-1.5" src={!isdark ? "/chart_icon_light@3x.webp" : "/chart_icon_dark@3x.webp"} width={14} height={14} alt="chart icon" />
                 <div className="vote-info-item-title">Current Voted Amount</div>
               </div>
               <div className="flex items-center mb-3">
@@ -153,7 +179,7 @@ state = 3
                 <Progress
                   classNames={{
                     base: "w-full h-full",
-                    track: "vote-progress-track",
+                    track: `${Number(noPercent) ? 'vote-progress-track' : 'vote-progress-no-burn-track'}`,
                     indicator: "vote-progress-indicator"
                   }}
                   aria-label={`${yesPercent}%`}
@@ -183,12 +209,12 @@ state = 3
           <>
             {
               state === 4 ? (
-                <div className="vote-btn" onClick={() => onOpen({})}>
+                <div className="vote-btn" onClick={() => onOpen()}>
                   Vote Now&nbsp;
                   <Image className="large-icon-size" src="/right_arrow.svg" width={20} height={20} alt="arrow icon" />
                 </div>
               ) : (
-                <div className="sponsor-btn" onClick={() => onOpen({})}>
+                <div className="sponsor-btn" onClick={() => onOpen()}>
                   Sponsor Now&nbsp;
                   <Image className="large-icon-size" src="/sponsor_btn_icon.svg" width={20} height={20} alt="sponsor icon" />
                 </div>
@@ -205,6 +231,7 @@ export default function Home() {
   const sentinelRef = useRef(null);
   const observerRef = useRef(null);
   const { theme } = useTheme();
+  const isdark = useMemo(() => theme === 'dark', [theme])
   const sdk = useSdk();
   const {isOpen, onOpen, onClose} = useDisclosure();
   const [curVoteInfo, setCurVoteInfo] = useState({});
@@ -216,7 +243,12 @@ export default function Home() {
     treasuryBalance: '-',
     allProposalBurnedWanAmount: '-',
     allProposalLockingWanAmount: '-',
-    allProposalWanAmount: '-'
+    allProposalWanAmount: '-',
+    votingWanMultiplierCount: 0,
+    proposalWanMultiplierCount: 0,
+    prospectiveProposalCount: 0,
+    succeededProposalCount: 0,
+    failedProposalCount: 0,
   })
   const [allProposalsIndex, setAllProposalsIndex] = useState(0);
   const [allProposalsArr, setAllProposalsArr] = useState([]);
@@ -229,8 +261,22 @@ export default function Home() {
   const [failedProposalsIndex, setFailedProposalsIndex] = useState(0);
   const [failedProposalsArr, setFailedProposalsArr] = useState([]);
 
+  // test
+  // const {address} = useAccount()
+  // const approveTs = async () => {
+  //   console.log('approveTs', sdk, address)
+  //   if (!sdk || !address) return 
+  //   var request = await sdk.buildReviewProposalTx(address, '0xe1c09eca10e9cf33be0ece3b1cd1d9dd31044e02ef0d50581f207444a239df22', true, toHex(''));
+ 
+  //   const hash = await sendTransaction(walletConfig, request);
+
+  //   console.log('approveTs raw tx hash', hash);
+
+  //   const receipt = await waitForTransactionReceipt( walletConfig, { hash });
+  //   console.log('approveTs raw tx receipt', receipt);
+  // }
+
   const handleModal = (info) => {
-    console.log('cur voteInfo', info)
     setCurVoteInfo(info);
     onOpen();
   }
@@ -278,8 +324,18 @@ export default function Home() {
         succeededProposalCount,
         failedProposalCount
       }
-      console.log('voteBaseInfo', voteBaseInfo, voteBaseInfo.allProposalBurnedWanAmount/voteBaseInfo.allProposalWanAmount*100)
+      const allNum = Number(proposalsRes.allProposalCount) - 1;
+      setAllProposalsIndex(allNum)
+      const activeNum = Number(proposalsRes.votingProposalCount) - 1;
+      setActiveProposalsIndex(activeNum)
+      const prospectiveNum = prospectiveProposalCount - 1;
+      setProspectiveProposalsIndex(prospectiveNum)
+      const passedNum = succeededProposalCount - 1;
+      setPassedProposalsIndex(passedNum)
+      const failedNum = failedProposalCount - 1
+      setFailedProposalsIndex(failedNum)
       setBaseInfo(voteBaseInfo)
+      await loadPage()
     }
     getInfo();
   }, [sdk])
@@ -295,13 +351,13 @@ export default function Home() {
     })
     arr = [].concat(arr, copyArr);
     const map = new Map();
-    arr.forEach(item => map.set(item.id, item));
+    arr.forEach(item => map.set(item.proposalId, item));
     arr = [...map.values()];
     return arr;
   }
 
   const fetchAllProposalsInfo = useCallback(async () => {
-    if (allProposalsIndex === -1) return;
+    if (allProposalsIndex === -1 || baseInfo.totalProposals === '-' || !baseInfo.totalProposals) return;
     const res = await sdk.getRecentReviewedProposals({
       start: allProposalsIndex,
       limit: LIMIT_NUM
@@ -310,7 +366,7 @@ export default function Home() {
     setAllProposalsArr(arr);
     setAllProposalsIndex(res.nextIndex);
     console.log('all vote info', arr);
-  }, [allProposalsIndex, sdk, allProposalsArr])
+  }, [allProposalsIndex, sdk, allProposalsArr, baseInfo.totalProposals])
 
   const fetchActiveProposalsInfo = useCallback(async () => {
     if (activeProposalsIndex === -1 || Number(baseInfo.activeProposals) === 0) return;
@@ -322,7 +378,7 @@ export default function Home() {
     setActiveProposalsArr(arr);
     setActiveProposalsIndex(res.nextIndex);
     console.log('active vote info', res);
-  }, [activeProposalsIndex, sdk, activeProposalsArr])
+  }, [activeProposalsIndex, sdk, activeProposalsArr, baseInfo.activeProposals])
 
   const fetchProspectiveProposalsInfo = useCallback(async () => {
     if (prospectiveProposalsIndex === -1 || baseInfo.prospectiveProposalCount === 0) return;
@@ -334,7 +390,7 @@ export default function Home() {
     setProspectiveProposalsArr(arr);
     setProspectiveProposalsIndex(res.nextIndex);
     console.log('prospective vote info', res);
-  }, [prospectiveProposalsIndex, sdk, prospectiveProposalsArr])
+  }, [prospectiveProposalsIndex, sdk, prospectiveProposalsArr, baseInfo.prospectiveProposalCoun])
 
   const fetchPassedProposalsInfo = useCallback(async () => {
     if (passedProposalsIndex === -1 || baseInfo.succeededProposalCount === 0) return;
@@ -346,7 +402,7 @@ export default function Home() {
     setPassedProposalsArr(arr);
     setPassedProposalsIndex(res.nextIndex);
     console.log('passed vote info', res);
-  }, [passedProposalsIndex, sdk, passedProposalsArr])
+  }, [passedProposalsIndex, sdk, passedProposalsArr, baseInfo.succeededProposalCount])
 
   const fetchFailedProposalsInfo = useCallback(async () => {
     if (failedProposalsIndex === -1 || baseInfo.failedProposalCount === 0) return;
@@ -358,10 +414,9 @@ export default function Home() {
     setFailedProposalsArr(arr);
     setFailedProposalsIndex(res.nextIndex);
     console.log('failed vote info', res);
-  }, [failedProposalsIndex, sdk, failedProposalsArr])
+  }, [failedProposalsIndex, sdk, failedProposalsArr, baseInfo.failedProposalCount])
 
   const loadPage = useCallback(() => {
-    console.log('loadPage', selectFilterKey, allProposalsIndex, activeProposalsIndex, prospectiveProposalsIndex, passedProposalsIndex, failedProposalsIndex)
     try {
       if (selectFilterKey === 'active') {
         fetchActiveProposalsInfo();
@@ -381,14 +436,9 @@ export default function Home() {
   }, [selectFilterKey, fetchAllProposalsInfo, fetchActiveProposalsInfo, fetchProspectiveProposalsInfo, fetchPassedProposalsInfo, fetchFailedProposalsInfo])
 
   useEffect(() => {
-    loadPage()
-  }, [])
-
-  useEffect(() => {
     const sentinel = sentinelRef.current
     if (!sentinel) return
 
-    // 断开旧 observer
     if (observerRef.current) observerRef.current.disconnect()
 
     observerRef.current = new IntersectionObserver(
@@ -399,8 +449,8 @@ export default function Home() {
         }
       },
       {
-        root: null, // 监听窗口（若监听容器滚动，传入容器元素）
-        rootMargin: '200px', // 预加载阈值（提前触发）
+        root: null,
+        rootMargin: '200px',
         threshold: 0.1,
       }
     )
@@ -426,16 +476,56 @@ export default function Home() {
     }
     loadPage()
   }
+  
+  const updateItem = async () => {
+    if (!sdk) return
+    const newOriginalProposalInfo = await sdk.getProposalInfo(proposalId);
+    const description = decodeProposalDescriptionData(newOriginalProposalInfo.description)
+    let newProposalInfo = convertBigIntToNumber(newOriginalProposalInfo)
+    newProposalInfo.description = description
+    console.log('newProposalInfo', newProposalInfo, selectFilterKey)
+
+    const updateFn = prev =>
+      prev.map(item =>
+        item.proposalId === curVoteInfo.proposalId
+          ? newProposalInfo
+          : item
+      )
+
+    switch (selectFilterKey) {
+      case 'all':
+        setAllProposalsArr(updateFn)
+      break;
+      case 'active':
+        setAllProposalsArr(updateFn)
+      break;
+      case 'prospective':
+        setAllProposalsArr(updateFn)
+      break;
+      case 'passed':
+        setAllProposalsArr(updateFn)
+      break;
+      case 'failed':
+        setAllProposalsArr(updateFn)
+      break;
+      default:
+        setAllProposalsArr(updateFn)
+    }
+  }
 
   return (
     <div className="min-h-screen">
       <main className="flex min-h-screen w-full flex-col">
         <Banner></Banner>
+        {/* <div
+          className="w-20 h-8 flex justify-center items-center rounded-lg bg-black text-white cursor-pointer"
+          onClick={approveTs}
+        >approve</div> */}
         <div className="px-[120]">
           <div className="grid grid-cols-3 gap-6 mb-10">
             <div className="introduction-item px-6 py-6 rounded-2xl">
               <div className="introduction-title mb-6">
-                <Image src={theme === "light" ? "/treasury_balance_icon_light@3x.webp" : "/treasury_balance_icon_dark@3x.webp"} width={16} height={16} alt="treasury balance icon" />
+                <Image src={!isdark ? "/treasury_balance_icon_light@3x.webp" : "/treasury_balance_icon_dark@3x.webp"} width={16} height={16} alt="treasury balance icon" />
                 <p>TREASURY BALANCE</p>
               </div>
               <div className="treasury-balance-value mb-7">
@@ -450,7 +540,7 @@ export default function Home() {
             </div>
             <div className="introduction-item px-6 py-6 rounded-2xl">
               <div className="introduction-title mb-6">
-                <Image src={theme === "light" ? "/proposals_icon_light@3x.webp" : "/proposals_icon_dark@3x.webp"} width={16} height={16} alt="proposals icon" />
+                <Image src={!isdark ? "/proposals_icon_light@3x.webp" : "/proposals_icon_dark@3x.webp"} width={16} height={16} alt="proposals icon" />
                 <p>PROPOSALS</p>
               </div>
               <div className="treasury-balance-value mb-6">
@@ -465,7 +555,7 @@ export default function Home() {
             </div>
             <div className="introduction-item px-6 py-6 rounded-2xl">
               <div className="introduction-title mb-6">
-                <Image src={theme === "light" ? "/pledged_icon_light@3x.webp" : "/pledged_icon_dark@3x.webp"} width={16} height={16} alt="pledged icon" />
+                <Image src={!isdark ? "/pledged_icon_light@3x.webp" : "/pledged_icon_dark@3x.webp"} width={16} height={16} alt="pledged icon" />
                 <p>PLEDGED WAN</p>
               </div>
               <div className="pledged-title mb-3">
@@ -533,10 +623,10 @@ export default function Home() {
               >
                 <div className="grid grid-cols-2 gap-6">
                   {
-                    allProposalsArr.map((v, k) => (
+                    allProposalsArr.map(v => (
                       <VoteInfoItem
-                        key={k}
-                        type={v.category}
+                        key={v.proposalId}
+                        category={v.category}
                         state={v.state}
                         onOpen={() => handleModal(v)}
                         voteInfo={v}
@@ -553,10 +643,10 @@ export default function Home() {
               >
                 <div className="grid grid-cols-2 gap-6">
                   {
-                    activeProposalsArr.map((v, k) => (
+                    activeProposalsArr.map(v => (
                       <VoteInfoItem
-                        key={k}
-                        type={v.category}
+                        key={v.proposalId}
+                        category={v.category}
                         state={v.state}
                         onOpen={() => handleModal(v)}
                         voteInfo={v}
@@ -573,10 +663,10 @@ export default function Home() {
               >
                 <div className="grid grid-cols-2 gap-6">
                   {
-                    prospectiveProposalsArr.map((v, k) => (
+                    prospectiveProposalsArr.map(v => (
                       <VoteInfoItem
-                        key={k}
-                        type={v.category}
+                        key={v.proposalId}
+                        category={v.category}
                         state={v.state}
                         onOpen={() => handleModal(v)}
                         voteInfo={v}
@@ -593,10 +683,10 @@ export default function Home() {
               >
                 <div className="grid grid-cols-2 gap-6">
                   {
-                    passedProposalsArr.map((v, k) => (
+                    passedProposalsArr.map(v => (
                       <VoteInfoItem
-                        key={k}
-                        type={v.category}
+                        key={v.proposalId}
+                        category={v.category}
                         state={v.state}
                         onOpen={() => handleModal(v)}
                         voteInfo={v}
@@ -613,10 +703,10 @@ export default function Home() {
               >
                 <div className="grid grid-cols-2 gap-6">
                   {
-                    failedProposalsArr.map((v, k) => (
+                    failedProposalsArr.map(v => (
                       <VoteInfoItem
-                        key={k}
-                        type={v.category}
+                        key={v.proposalId}
+                        category={v.category}
                         state={v.state}
                         onOpen={() => handleModal(v)}
                         voteInfo={v}
@@ -644,6 +734,7 @@ export default function Home() {
         proposalInfo={curVoteInfo}
         votingWanMultiplierCount={baseInfo?.votingWanMultiplierCount}
         proposalWanMultiplierCount={baseInfo?.proposalWanMultiplierCount}
+        handleModal={updateItem}
       />
     </div>
   );

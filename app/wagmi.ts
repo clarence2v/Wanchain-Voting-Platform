@@ -17,7 +17,6 @@ import type { Chain } from 'wagmi/chains'
 const network: Chain =
   process.env.REACT_APP_CHAINID === '888' ? wanchain : wanchainTestnet
 
-// 1. 自定义 Wanchain 链
 export const wanchainMainnet = defineChain({
   id: 888,
   name: 'Wanchain',
@@ -43,20 +42,17 @@ export const wanchainMainnet = defineChain({
   },
 });
 
-// 2. 要支持的链列表
 export const chains = [wanchainMainnet, mainnet] as const;
 
-// 3. WalletConnect 的 projectId
 const projectId = 'e3b2cc9688caa268ca76081f5fb2e154';
 
-// 4. 用 RainbowKit 提供的 getDefaultConfig（最省事）
 export const config = getDefaultConfig({
   appName: 'Wanchain Voting Platform',
   projectId,
   chains,
   transports: {
     [wanchainMainnet.id]: http(wanchainMainnet.rpcUrls.default.http[0]),
-    [mainnet.id]: http(),           // 这里可以换成你自己的以太坊 RPC
+    [mainnet.id]: http(),
   },
   ssr: true,
 });

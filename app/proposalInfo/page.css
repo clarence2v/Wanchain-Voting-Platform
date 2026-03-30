@@ -66,6 +66,7 @@
   font-stretch: normal;
   font-style: normal;
   letter-spacing: normal;
+  cursor: pointer;
 }
 
 .proposal-info-decription-title {
@@ -120,7 +121,7 @@
   color: var(--title-color);
 }
 
-.proposal-info-vote-btn {
+.proposal-info-vote-btn, .proposal-info-sponsor-btn {
   padding: 12px 0;
   border-radius: 14px;
   background-color: #0f68aa;
@@ -131,4 +132,8 @@
   text-align: center;
   color: #fff;
   cursor: pointer;
+}
+
+.proposal-info-sponsor-btn {
+  background-color: #d444f1;
 }

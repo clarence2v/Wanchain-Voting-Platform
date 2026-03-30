@@ -24,8 +24,8 @@ import {
 import { walletConfig } from "@/app/wagmi";
 import { toHex } from "viem";
 import { decodeProposalDescriptionData } from "@wandevs/governance-contracts-sdk";
+import { wanDecimal } from "@/config/config";
 
-const wanDecimal = 18;
 
 export default function VoteModal(props: {
   proposalInfo: ProposalInfoType,
@@ -37,13 +37,12 @@ export default function VoteModal(props: {
   const {
     isOpen, onClose, proposalInfo, proposalWanMultiplierCount, votingWanMultiplierCount
   } = props;
-  proposalInfo.state = 3;
   const { theme } = useTheme();
   const isdark = useMemo(() => theme === 'dark', [theme])
   const sdk = useSdk();
   const { address } = useAccount();
   const [voteType, setVoteType] = useState(true);
-  const [pledgeType, setVoteValue] = useState(2);   // burn: 1   lock: 2
+  const [pledgeType, setPledgeType] = useState(2);   // burn: 1   lock: 2
   const [voteDurationIndex, setVoteDurationIndex] = useState(0);
   const [voteAmount, setVoteAmount] = useState('');
   const [burnMultiplierInfo, setBurnMultiplierInfo] = useState<PlegeMultiplierReturn>({
@@ -65,15 +64,14 @@ export default function VoteModal(props: {
 
   useEffect(() => {
     setVoteType(true)
-    setVoteValue(2)
+    setPledgeType(2)
     setVoteDurationIndex(0)
     setVoteAmount('')
   }, [isOpen])
 
   useEffect(() => {
     const getMultipliers = async () => {
-      if (!sdk || proposalWanMultiplierCount === void 0 || votingWanMultiplierCount === void 0) {
-        console.error('sdk init')
+      if (!sdk || proposalWanMultiplierCount === undefined || votingWanMultiplierCount === undefined) {
         return
       }
       const multipliers = await sdk.getProposalMultipliers({
@@ -203,9 +201,9 @@ export default function VoteModal(props: {
 
     console.log('isProspective: ', isProspective, 'raw tx hash', hash);
 
-    // 4. 等待上链（可选）
     const receipt = await waitForTransactionReceipt( walletConfig, { hash });
     console.log('raw tx receipt', receipt);
+    onClose();
   }
 
   return (
@@ -284,7 +282,7 @@ export default function VoteModal(props: {
                 <div className="voting-mechanism-con grid grid-cols-2 gap-0 mb-6">
                   <div
                     className={`voting-mechanism-item ${pledgeType === 2 ? isProspective ? "bg-customPurple-0 text-white" : "bg-customBlue-0 text-white" : ""}`}
-                    onClick={() => setVoteValue(2)}
+                    onClick={() => setPledgeType(2)}
                   >
                     <Image
                       className="normal-icon-size mr-1.5"
@@ -296,7 +294,7 @@ export default function VoteModal(props: {
                   </div>
                   <div
                     className={`voting-mechanism-item ${pledgeType === 1 && "bg-customYellow-0 text-white"}`}
-                    onClick={() => setVoteValue(1)}
+                    onClick={() => setPledgeType(1)}
                   >
                     <Image
                       className="normal-icon-size mr-1.5"
@@ -410,7 +408,7 @@ export default function VoteModal(props: {
                 <div className="vote-modal-cancel-btn" onClick={onClose}>
                   Cancel
                 </div>
-                <div className="vote-modal-confirm-sponsor-btn" onClick={handleConfirm}>
+                <div className={`${isProspective ? 'vote-modal-confirm-sponsor-btn' : 'vote-modal-confirm-btn'}`} onClick={handleConfirm}>
                   Confirm Vote
                 </div>
               </ModalFooter>

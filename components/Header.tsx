@@ -27,12 +27,11 @@ const Header = () => {
     setMounted(true);
   }, []);
 
-  // ✅ 不要整个 Header 消失，可以用一个“降级版”在未 mounted 时先画出来
   const currentTheme = mounted
     ? theme === 'system'
       ? systemTheme
       : theme
-    : 'light'; // 初始先当作 light 渲染，避免闪屏
+    : 'light';
 
   return (
     <Navbar data-bs-theme={currentTheme || 'light'}>
@@ -50,7 +49,6 @@ const Header = () => {
             <p className="logo-title h-3 leading-3">GOVERNANCE</p>
           </div>
 
-          {/* ✅ 用 next/link 做客户端导航，避免整页刷新 */}
           <Nav.Item className={`nav-con mx-3 ${isActive('/')}`}>
             <Nav.Link as={Link} href="/" className="header-button">
               Home
@@ -95,9 +93,15 @@ const Header = () => {
             <WalletButton />
           </div>
 
-          <Nav.Item className={`nav-con mx-3 ${isActive('/createProposal')}`}>
-            {/* 如果 docs 还没做，也可以先用 # 或外链 */}
-            <Nav.Link as={Link} href="/createProposal" className="header-button">
+          <Nav.Item className="header-create-vote-btn">
+            <Image
+              src="/create_vote_plus_icon.svg"
+              alt=''
+              className='header-extra-large-icon-size'
+              width={24}
+              height={24}
+            />
+            <Nav.Link as={Link} href="/createProposal">
               New
             </Nav.Link>
           </Nav.Item>

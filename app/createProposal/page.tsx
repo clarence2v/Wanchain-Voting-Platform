@@ -9,7 +9,7 @@ import fundingLightIcon from '@image/funding_icon_light.webp'
 import fundingDarkIcon from '@image/funding_icon_dark.webp'
 import technicalLightIcon from '@image/technical_icon_light.webp'
 import technicalDarkIcon from '@image/technical_icon_dark.webp'
-import { isNumber, formatBalance } from "@/utils/utils";
+import { isNumber, formatBalance, convertBigIntToNumber, handleTimeThMaxPer, formatValue } from "@/utils/utils";
 import { JSX } from "react/jsx-runtime";
 import { useSdk } from "@/app/providers";
 import { encodeProposalDescriptionData } from "@wandevs/governance-contracts-sdk";
@@ -25,6 +25,8 @@ import { walletConfig } from "../wagmi";
 import BigNumber from "bignumber.js";
 import ConfirmModal from "@/components/ConfirmModal";
 import { WAN_GOVERNOR_PROXY, TESTNET_XP_ADDR } from "@/config/address";
+import { PlegeMultiplierReturn } from "@/types/proposalTypes";
+import { wanDecimal } from "@/config/config";
 
 const MailIcon = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) => {
   return (
@@ -70,8 +72,8 @@ export default function Proposals() {
   }, [theme])
   const sdk = useSdk();
   const { address } = useAccount();
-  const [voteValue, setVoteValue] = useState('lock');
-  const [category, setCategory] = useState(0);
+  const [pledgeType, setPledgeType] = useState(2);   // burn: 1   lock: 2
+  const [category, setCategory] = useState(0); // Funding: 0.   Technical: 1
   const [proposalTitle, setProposalTitle] = useState('');
   const [descriptionValue, setDescriptionValue] = useState('');
   const [requestValue, setRequestValue] = useState('');
@@ -81,6 +83,20 @@ export default function Proposals() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [minAmount, setMinAmount] = useState(0);
   const [treasuryBalance, setTreasuryBalance] = useState('0');
+  const [proposalWanMultiplierNum, setProposalWanMultiplierNum] = useState(0)
+  const [votingWanMultiplierNum, setVotingWanMultiplierNum] = useState(0)
+  const [lockMultiplierInfo, setLockMultiplierInfo] = useState<PlegeMultiplierReturn>({
+    pledgeType: 0,
+    lockDuration: 0,
+    multiplier: 0
+  });
+  const [burnMultiplierInfo, setBurnMultiplierInfo] = useState<PlegeMultiplierReturn>({
+    pledgeType: 0,
+    lockDuration: 0,
+    multiplier: 0
+  });
+  const [voteDurationNum, setVoteDurationNum] = useState(0)
+
   const typeArr = useMemo(() => {
     return [{
     label: 'Funding',
@@ -101,10 +117,15 @@ export default function Proposals() {
       const baseRes = await sdk.getBaseParameters();
       console.log('baseRes', baseRes)
       const {
-        minParticipationAmount
+        minParticipationAmount,
+        proposalWanMultiplierCount,
+        votingWanMultiplierCount,
+        voteDuration
       } = baseRes;
       setMinAmount(Number(minParticipationAmount))
-
+      setProposalWanMultiplierNum(Number(proposalWanMultiplierCount))
+      setVotingWanMultiplierNum(Number(votingWanMultiplierCount))
+      setVoteDurationNum(Number(voteDuration))
       const treasuryAddr = baseRes.wanTreasury;
       const treasuryOriginalBalance = await sdk.publicClient.getBalance({
         address: treasuryAddr
@@ -113,6 +134,39 @@ export default function Proposals() {
     }
     getInfo();
   }, [sdk])
+  
+    useEffect(() => {
+      const getMultipliers = async () => {
+        if (!sdk || proposalWanMultiplierNum === void 0) {
+          console.error('sdk init')
+          return
+        }
+        try {
+          const multipliers = await sdk.getProposalMultipliers({
+            proposalWanMultiplier: {
+              start: 0,
+              end: Math.max(proposalWanMultiplierNum - 1, 0)
+            },
+            votingWanMultiplier : undefined
+          })
+          console.log('multipliers', multipliers)
+          const { proposalWanMultipliers } = multipliers
+          const proposalWanMultipliersArr = convertBigIntToNumber(proposalWanMultipliers)
+          proposalWanMultipliersArr.forEach((v: PlegeMultiplierReturn) => {
+            if (v.pledgeType === 1) {
+              // burn
+              setBurnMultiplierInfo(v)
+            } else {
+              setLockMultiplierInfo(v)
+            }
+          })
+        } catch (e) {
+          console.error('getMultipliers', e)
+        }
+  
+      }
+      getMultipliers()
+    }, [sdk, proposalWanMultiplierNum, votingWanMultiplierNum])
 
   const handleRequestValue = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
@@ -161,7 +215,6 @@ export default function Proposals() {
 
   const handleCategory = (e: React.ChangeEvent<HTMLSelectElement>) => {
     let value = e.target.value;
-    console.log('value select:::;')
     let categoryId = 0;
     if (value === 'Funding') {
       categoryId = 0; 
@@ -170,18 +223,37 @@ export default function Proposals() {
     }
     setCategory(categoryId);
   }
+  
+  const durationPer = useMemo(() => {
+    if (pledgeType === 2) {
+      // lock
+      return lockMultiplierInfo.multiplier
+    } else {
+      return burnMultiplierInfo.multiplier
+    }
+  }, [pledgeType, burnMultiplierInfo, lockMultiplierInfo])
+
+  const minReq4Active = useMemo(() => {
+    const stakeNum = new BigNumber(+pledgeValue).times(durationPer).toNumber()
+    const min = new BigNumber(+requestValue).minus(stakeNum)
+    if (min.lte(0)) {
+      return '0'
+    }
+    return min.toString(10)
+  }, [requestValue, pledgeValue])
 
   const pledgeIsFull = useMemo(() => {
-    return Number(pledgeValue) >= 1000;
-  }, [pledgeValue])
+    return new BigNumber(+minReq4Active).eq(0);
+  }, [minReq4Active])
 
   const handleCancel = () => {
-    setVoteValue('lock');
+    setPledgeType(2);
     setProposalTitle('');
     setDescriptionValue('');
     setRequestValue('');
     setPledgeValue('');
   }
+
 
   const handleHiddenModal = () => setShowConfirmModal(false)
 
@@ -236,19 +308,26 @@ export default function Proposals() {
       console.error('invalid info')
       return;
     }
-    const pledgeType = voteValue === 'lock' ? 2 : 1;
     const description = encodeProposalDescriptionData(version, proposalTitle, descriptionValue, emailValue, userNameValue);
-    const pledgeNum = BigInt(new BigNumber(pledgeValue).times(Math.pow(10, 18)).toString())
-    if (new BigNumber(pledgeNum).lt(minAmount)) {
-      console.error('invalid amount')
-      return;
+    let requestNum: number, pledgeNum: number;
+    if (category === 0) {
+      requestNum = new BigNumber(requestValue).times(Math.pow(10, wanDecimal)).toNumber()
+      pledgeNum = new BigNumber(pledgeValue).times(Math.pow(10, wanDecimal)).toNumber()
+      if (new BigNumber(pledgeNum).times(durationPer).lt(requestNum) || new BigNumber(pledgeNum).lt(minAmount) || new BigNumber(requestNum).lt(minAmount)) {
+        console.error('invalid amount')
+        return;
+      }
+      const treasuryBalanceTenPer = BigInt(new BigNumber(treasuryBalance).times(Math.pow(10, wanDecimal)).times(10).toString())
+      console.log('requestNum', requestNum, treasuryBalanceTenPer)
+      if (new BigNumber(requestNum).gt(treasuryBalanceTenPer)) {
+        console.error('The requested amount must not exceed 10% of the Community Treasury.')
+        return;
+      }
+    } else {
+      requestNum = 0
+      pledgeNum = 0
     }
-    const requestNum = BigInt(new BigNumber(requestValue).times(Math.pow(10, 18)).toString())
-    if (new BigNumber(requestNum).gt(treasuryBalance)) {
-      console.error('The requested amount must not exceed 10% of the Community Treasury.')
-      return;
-    }
-    const request = await sdk.buildCreateProposalTx(address, pledgeNum, requestNum, category, pledgeType, description);
+    const request = await sdk.buildCreateProposalTx(address, BigInt(pledgeNum), BigInt(requestNum), category, pledgeType, description);
     const hash = await sendTransaction(walletConfig, request);
     console.log('raw tx hash', hash);
 
@@ -342,110 +421,116 @@ export default function Proposals() {
               </SelectItem>
             ))}
           </Select>
-          <div className="flex items-center mb-4 h-5">
-            <Image
-              className="normal-icon-size mr-2"
-              width={18}
-              height={18}
-              src="/funding-request-icon@3x.webp"
-              alt="funding request icon"
-            />
-            <p className="creation-item-title">Funding Request</p>
-          </div>
-          <p className="creation-proposal-title  h-5 flex items-center mb-2">Requested Amount (WAN)</p>
-          <div className="inp-con justify-between px-4 mb-2">
-            <input
-              className="inp-request-value"
-              value={requestValue}
-              onChange={handleRequestValue}
-              placeholder="0"
-            />
-            WAN
-          </div>
-          <p className="creation-discription-tip mb-3">Technical proposals usually request 0 WAN.</p>
-          <div className="funding-requestion-con p-6 mb-4">
-            <p className="funding-requestion-title mb-2">Collateral Configuration</p>
-            <div className="voting-mechanism-con grid grid-cols-2 gap-0 mb-6">
-              <div
-                className={`voting-mechanism-item ${voteValue === "lock" ? "bg-customBlue-0 text-white" : ""}`}
-                onClick={() => setVoteValue("lock")}
-              >
-                <Image
-                  className="small-icon-size mr-1.5"
-                  src={voteValue === "lock" ? "/lock_selected_icon.svg" : "/lock_notselected_icon.svg"}
-                  width={16}
-                  height={16}
-                  alt="favor icon"
-                />&nbsp;Lock (10x Leverage)
-              </div>
-              <div
-                className={`voting-mechanism-item ${voteValue === "burn" ? "bg-customYellow-0 text-white" : ""}`}
-                onClick={() => setVoteValue("burn")}
-              >
-                <Image
-                  className="small-icon-size mr-1.5"
-                  src={voteValue === "burn" ? "/burn_selected_icon.svg" : "/burn_notselected_icon.svg"}
-                  width={16}
-                  height={16}
-                  alt="favor icon"
-                />&nbsp;Burn (50x Leverage)
-              </div>
-            </div>
-            <div className="funding-requestion-title mb-2 flex items-center justify-between">
-              Your Pledge Amount
-              <p>Min. Required for Active:<span>0.01 WAN</span></p>
-            </div>
-            <div className="inp-con justify-between px-4 mb-3">
-              <input
-                className="inp-request-value"
-                value={pledgeValue}
-                onChange={handlePledgeValue}
-                placeholder="0"
-              />
-              <span>WAN</span>
-            </div>
-            {
-              pledgeIsFull ? (
-                <div className="creation-prospective-active-con">
-                  <div className="flex justify-between mb-4">
-                    <Image
-                      src="/creation_proposal_active_icon.svg"
-                      className="extra-large-icon-size mr-3"
-                      width={24}
-                      height={24}
-                      alt=""
-                    />
-                    <div>
-                      <p className="creation-prospective-active-title mb-1">Active Proposal (Direct to Vote)</p>
-                      <div className="creation-proposal-descrition">
-                        Great! You fully meet the collateral requirement. Once approved by the team, this proposal will immediately start the voting period.
-                      </div>
+          {
+            category === 0 ? (
+              <>
+                <div className="flex items-center mb-4 h-5">
+                  <Image
+                    className="normal-icon-size mr-2"
+                    width={18}
+                    height={18}
+                    src="/funding-request-icon@3x.webp"
+                    alt="funding request icon"
+                  />
+                  <p className="creation-item-title">Funding Request</p>
+                </div>
+                <p className="creation-proposal-title  h-5 flex items-center mb-2">Requested Amount (WAN)</p>
+                <div className="inp-con justify-between px-4 mb-2">
+                  <input
+                    className="inp-request-value"
+                    value={requestValue}
+                    onChange={handleRequestValue}
+                    placeholder="0"
+                  />
+                  WAN
+                </div>
+                <p className="creation-discription-tip mb-3">Technical proposals usually request 0 WAN.</p>
+                <div className="funding-requestion-con p-6 mb-4">
+                  <p className="funding-requestion-title mb-2">Collateral Configuration</p>
+                  <div className="voting-mechanism-con grid grid-cols-2 gap-0 mb-6">
+                    <div
+                      className={`voting-mechanism-item ${pledgeType === 2 ? "bg-customBlue-0 text-white" : ""}`}
+                      onClick={() => setPledgeType(2)}
+                    >
+                      <Image
+                        className="small-icon-size mr-1.5"
+                        src={pledgeType === 2 ? "/lock_selected_icon.svg" : "/lock_notselected_icon.svg"}
+                        width={16}
+                        height={16}
+                        alt="favor icon"
+                      />&nbsp;Lock ({lockMultiplierInfo.multiplier}x Leverage)
+                    </div>
+                    <div
+                      className={`voting-mechanism-item ${pledgeType === 1 ? "bg-customYellow-0 text-white" : ""}`}
+                      onClick={() => setPledgeType(1)}
+                    >
+                      <Image
+                        className="small-icon-size mr-1.5"
+                        src={pledgeType === 1 ? "/burn_selected_icon.svg" : "/burn_notselected_icon.svg"}
+                        width={16}
+                        height={16}
+                        alt="favor icon"
+                      />&nbsp;Burn ({burnMultiplierInfo.multiplier}x Leverage)
                     </div>
                   </div>
-                  <div className="prograss-active-line"></div>
-                </div>
-              ) : (
-                <div className="creation-prospective-con">
-                  <div className="flex justify-between mb-4">
-                    <Image
-                      src="/creation_proposal_dollar_icon.svg"
-                      className="extra-large-icon-size mr-3"
-                      width={24}
-                      height={24}
-                      alt=""
-                    />
-                    <div>
-                      <p className="creation-prospective-title mb-1">Prospective Proposal (Needs Sponsors)</p>
-                      <div className="creation-proposal-descrition">
-                        Your pledge covers 0% of the requirement. Once approved, this proposal will require community sponsors to pledge the remaining 0.00 WAN.
-                      </div>
-                    </div>
+                  <div className="funding-requestion-title mb-2 flex items-center justify-between">
+                    Your Pledge Amount
+                    <p>Min. Required for Active:&nbsp;<span>{formatValue(minReq4Active, 0)} WAN</span></p>
                   </div>
-                  <div className="prograss-line"></div>
+                  <div className="inp-con justify-between px-4 mb-3">
+                    <input
+                      className="inp-request-value"
+                      value={pledgeValue}
+                      onChange={handlePledgeValue}
+                      placeholder="0"
+                    />
+                    <span>WAN</span>
+                  </div>
+                  {
+                    pledgeIsFull ? (
+                      <div className="creation-prospective-active-con">
+                        <div className="flex justify-between mb-4">
+                          <Image
+                            src="/creation_proposal_active_icon.svg"
+                            className="extra-large-icon-size mr-3"
+                            width={24}
+                            height={24}
+                            alt=""
+                          />
+                          <div>
+                            <p className="creation-prospective-active-title mb-1">Active Proposal (Direct to Vote)</p>
+                            <div className="creation-proposal-descrition">
+                              Great! You fully meet the collateral requirement. Once approved by the team, this proposal will immediately start the voting period.
+                            </div>
+                          </div>
+                        </div>
+                        <div className="prograss-active-line"></div>
+                      </div>
+                    ) : (
+                      <div className="creation-prospective-con">
+                        <div className="flex justify-between mb-4">
+                          <Image
+                            src="/creation_proposal_dollar_icon.svg"
+                            className="extra-large-icon-size mr-3"
+                            width={24}
+                            height={24}
+                            alt=""
+                          />
+                          <div>
+                            <p className="creation-prospective-title mb-1">Prospective Proposal (Needs Sponsors)</p>
+                            <div className="creation-proposal-descrition">
+                              Your pledge covers 0% of the requirement. Once approved, this proposal will require community sponsors to pledge the remaining 0.00 WAN.
+                            </div>
+                          </div>
+                        </div>
+                        <div className="prograss-line"></div>
+                      </div>
+                    )
+                  }
                 </div>
-              )
-            }
-          </div>
+              </>
+            ) : null
+          }
           <div className="flex items-center mb-4 h-5">
             <Image
               className="normal-icon-size mr-2"
@@ -517,7 +602,7 @@ export default function Proposals() {
                 To ensure security and validity, the voting period will start automatically immediately after the team audit is approved.
               </p>
               <div className="creation-voting-duration-con">
-                <p className="creation-voting-duration-value">2 Weeks</p>
+                <p className="creation-voting-duration-value">{handleTimeThMaxPer(voteDurationNum)}</p>
                 <p className="creation-voting-duration-note">(Fixed)</p>
               </div>
             </div>
